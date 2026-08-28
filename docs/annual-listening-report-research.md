@@ -71,6 +71,10 @@ playScore = min(listenedMs / durationMs, 1.0)
 
 这样可以统计某年新增了多少歌曲，以及新增歌曲中有多少真正被收听。
 
+### 跨平台标识
+
+播放记录未来需要和电脑端合并，因此不能把 Android MediaStore 的 `audioId` 当作跨平台主键。建议使用稳定的 `canonicalId`，并同时保留来源 URI、文件哈希和路径提示作为辅助信息。所有事件都应包含全局唯一的 `eventId`、固定的 `deviceId` 和 `schemaVersion`。时间统一使用 UTC 的 ISO 8601 格式，导出格式优先支持一行一条事件的 JSONL，便于增量同步和按 `eventId` 去重。
+
 ## 4. 第一版建议报告内容
 
 - 全年有效播放次数

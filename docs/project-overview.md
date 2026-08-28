@@ -56,6 +56,8 @@ APlayer 是一款 Android 本地音乐播放器，主要面向本地音乐库，
 
 现有 `History` 可以支持最近播放和简单排行，但没有保存每一次播放事件，因此无法准确生成按年份、月份、时段统计的年度报告。
 
+年度统计功能应采用独立的跨平台播放事件协议。Android 端使用 Room 保存事件，电脑端通过 JSON/JSONL 导入或同步；协议中的 `eventId`、`deviceId`、`schemaVersion`、UTC 时间和 `canonicalId` 不依赖 Android 专有实现。
+
 ## 6. 本地构建
 
 Debug 构建命令：
