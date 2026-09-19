@@ -33,6 +33,7 @@
 
 - **本文档 = 全局唯一设计方案**。
 - `docs/play-event-protocol-spec.md`：跨平台协议规范（本文档的提炼/补充）。
+- `docs/annual-report-design.md`：**报告层（第 4 层）设计文档**（功能清单、口径、呈现、分阶段计划）。
 - `docs/play-event-execution.md`：Android 落地执行说明。
 - `docs/samples/play-events-2026.sample.jsonl`：导出样例。
 - PC 端实现步骤：后续基于 PC 端代码单独生成，不在本文档内。
@@ -277,6 +278,8 @@ ratio >= 0.9 或自然结束    -> completed = true
 - **可选字段填充**：`playlistId`、`outputDevice`、`isForeground`、`decoder`、`gapAfterMs` 目前多为空，待后续按平台能力填充。
 
 ### 12.2 报告层待做（可视化 / 分享）
+
+> 详细功能清单、每项口径与数据来源、分阶段计划，见 `docs/annual-report-design.md`。
 
 - **时段（hour）分布**：已计算（`hourDistribution`）但未在界面展示。
 - **新增歌曲数**：已计算（`addedSongs`）但未在界面展示。
