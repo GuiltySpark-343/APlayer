@@ -75,6 +75,10 @@ fun SettingScreen() {
       item {
         val nav = LocalNavController.current
 
+        ArrowPreference(R.string.annual_report) {
+          nav.navigate(RouteAnnualReport)
+        }
+
         SettingCategory.entries.forEach { category ->
           SettingCategoryPreference(
             iconRes = category.iconRes,
@@ -306,10 +310,6 @@ private fun OtherPreferenceItems() {
   }
 
   PlayEventSettingLogic()
-
-  ArrowPreference(R.string.annual_report) {
-    nav.navigate(RouteAnnualReport)
-  }
 
   ClearCacheLogic()
 }
