@@ -605,4 +605,24 @@
   <string name="source_queue_auto">自动播放</string>
   <string name="source_resume">恢复播放</string>
   <string name="source_external">外部打开</string>
+  <!-- 年度报告 P1 -->
+  <string name="stat_trend">月份时长趋势</string>
+  <string name="stat_compare">与去年对比</string>
+  <string name="stat_weekday">星期分布</string>
+  <string name="stat_heatmap">听歌日历</string>
+  <string name="stat_streak">最长连续听歌</string>
+  <string name="stat_late_night">深夜听歌</string>
+  <string name="stat_late_night_ratio">深夜占比</string>
+  <string name="stat_late_night_top">深夜最常听</string>
+  <string name="stat_loop_top">单曲循环王</string>
+  <string name="stat_genre">流派分布</string>
+  <string name="stat_last_year">去年</string>
+  <string name="stat_this_year">今年</string>
+  <string name="weekday_sun">日</string>
+  <string name="weekday_mon">一</string>
+  <string name="weekday_tue">二</string>
+  <string name="weekday_wed">三</string>
+  <string name="weekday_thu">四</string>
+  <string name="weekday_fri">五</string>
+  <string name="weekday_sat">六</string>
 </resources>

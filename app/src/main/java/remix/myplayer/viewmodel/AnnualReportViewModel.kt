@@ -43,11 +43,11 @@ class AnnualReportViewModel @Inject constructor(
     viewModelScope.launch {
       val years = playEventRepository.availableYears()
       val year = _state.value.year.takeIf { it in years } ?: (years.firstOrNull() ?: currentYear())
-      val report = playEventRepository.annualReport(year)
       _state.value = ReportUiState(
         years = years,
         year = year,
-        report = report,
+        report = playEventRepository.annualReport(year),
+        previousReport = previousReportOf(years, year),
         loading = false
       )
     }
@@ -57,11 +57,19 @@ class AnnualReportViewModel @Inject constructor(
     if (_state.value.year == year) return
     _state.value = _state.value.copy(year = year, loading = true)
     viewModelScope.launch {
+      val years = _state.value.years
       _state.value = _state.value.copy(
         report = playEventRepository.annualReport(year),
+        previousReport = previousReportOf(years, year),
         loading = false
       )
     }
+  }
+
+  /** P1：取比该年小的最近一年报告，用于“多年对比”。 */
+  private suspend fun previousReportOf(years: List<Int>, year: Int): AnnualReport? {
+    val prev = years.filter { it < year }.maxOrNull() ?: return null
+    return playEventRepository.annualReport(prev)
   }
 
   fun clear() {
@@ -186,6 +194,7 @@ data class ReportUiState(
   val years: List<Int> = emptyList(),
   val year: Int? = null,
   val report: AnnualReport? = null,
+  val previousReport: AnnualReport? = null,
   val loading: Boolean = true,
   val exportIntent: Intent? = null,
   val exportRequestId: Int = 0

@@ -1,11 +1,15 @@
 package remix.myplayer.data.model.report
 
+import remix.myplayer.data.db.room.dao.DayCount
+import remix.myplayer.data.db.room.dao.GenreCount
 import remix.myplayer.data.db.room.dao.HourCount
+import remix.myplayer.data.db.room.dao.LoopItem
 import remix.myplayer.data.db.room.dao.MonthCount
 import remix.myplayer.data.db.room.dao.SourceCount
 import remix.myplayer.data.db.room.dao.TopAlbumItem
 import remix.myplayer.data.db.room.dao.TopArtistItem
 import remix.myplayer.data.db.room.dao.TopPlayItem
+import remix.myplayer.data.db.room.dao.WeekdayCount
 
 /**
  * 某一年度的听歌报告聚合结果。
@@ -30,7 +34,13 @@ data class AnnualReport(
   val topAlbums: List<TopAlbumItem>,
   val monthDistribution: List<MonthCount>,
   val hourDistribution: List<HourCount>,
-  val sourceBreakdown: List<SourceCount>
+  val sourceBreakdown: List<SourceCount>,
+  // ---- P1 ----
+  val weekdayDistribution: List<WeekdayCount>,
+  val dailyDistribution: List<DayCount>,
+  val loopTop: List<LoopItem>,
+  val genreBreakdown: List<GenreCount>,
+  val lateNightTopSongs: List<TopPlayItem>
 )
 
 /**

@@ -623,4 +623,24 @@
   <string name="source_queue_auto">Auto</string>
   <string name="source_resume">Resume</string>
   <string name="source_external">External</string>
+  <!-- Annual report P1 -->
+  <string name="stat_trend">Monthly Trend</string>
+  <string name="stat_compare">vs Last Year</string>
+  <string name="stat_weekday">Weekday</string>
+  <string name="stat_heatmap">Listening Calendar</string>
+  <string name="stat_streak">Longest Streak</string>
+  <string name="stat_late_night">Late Night</string>
+  <string name="stat_late_night_ratio">Late Night Share</string>
+  <string name="stat_late_night_top">Late Night Top</string>
+  <string name="stat_loop_top">Most Looped</string>
+  <string name="stat_genre">Genres</string>
+  <string name="stat_last_year">Last</string>
+  <string name="stat_this_year">This</string>
+  <string name="weekday_sun">S</string>
+  <string name="weekday_mon">M</string>
+  <string name="weekday_tue">T</string>
+  <string name="weekday_wed">W</string>
+  <string name="weekday_thu">T</string>
+  <string name="weekday_fri">F</string>
+  <string name="weekday_sat">S</string>
 </resources>

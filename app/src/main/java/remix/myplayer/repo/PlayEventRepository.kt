@@ -66,7 +66,12 @@ class PlayEventRepoImpl @Inject constructor(
       topAlbums = playEventDao.topAlbums(year, TOP_LIMIT),
       monthDistribution = playEventDao.monthDistribution(year),
       hourDistribution = playEventDao.hourDistribution(year),
-      sourceBreakdown = playEventDao.sourceBreakdown(year)
+      sourceBreakdown = playEventDao.sourceBreakdown(year),
+      weekdayDistribution = playEventDao.weekdayDistribution(year),
+      dailyDistribution = playEventDao.dailyDistribution(year),
+      loopTop = playEventDao.loopRanking(year, TOP_LIMIT),
+      genreBreakdown = playEventDao.genreBreakdown(year, TOP_LIMIT),
+      lateNightTopSongs = playEventDao.lateNightTopSongs(year, TOP_LIMIT)
     )
   }
 

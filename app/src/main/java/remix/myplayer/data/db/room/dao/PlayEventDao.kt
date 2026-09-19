@@ -148,7 +148,7 @@ interface PlayEventDao {
 
   @Query(
     """
-    SELECT hour AS hour, COUNT(*) AS plays
+    SELECT hour AS hour, COUNT(*) AS plays, COALESCE(SUM(listenedMs), 0) AS listenedMs
     FROM play_events
     WHERE eventType = 'playback' AND year = :year
     GROUP BY hour
@@ -167,6 +167,83 @@ interface PlayEventDao {
     """
   )
   suspend fun sourceBreakdown(year: Int): List<SourceCount>
+
+  // P1：星期分布
+  @Query(
+    """
+    SELECT weekday AS weekday, COUNT(*) AS plays, COALESCE(SUM(listenedMs), 0) AS listenedMs
+    FROM play_events
+    WHERE eventType = 'playback' AND year = :year
+    GROUP BY weekday
+    ORDER BY weekday
+    """
+  )
+  suspend fun weekdayDistribution(year: Int): List<WeekdayCount>
+
+  // P1：按天分布（日历热力图 / 连续听歌天数）
+  @Query(
+    """
+    SELECT month AS month, day AS day, COUNT(*) AS plays, COALESCE(SUM(listenedMs), 0) AS listenedMs
+    FROM play_events
+    WHERE eventType = 'playback' AND year = :year
+    GROUP BY month, day
+    ORDER BY month, day
+    """
+  )
+  suspend fun dailyDistribution(year: Int): List<DayCount>
+
+  // P1：单曲循环王（loopCount > 1 的轮数）
+  @Query(
+    """
+    SELECT canonicalId AS canonicalId,
+      MAX(audioId) AS audioId,
+      (SELECT titleSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS title,
+      (SELECT artistSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS artist,
+      (SELECT albumSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS album,
+      COUNT(*) AS loops,
+      COALESCE(SUM(listenedMs), 0) AS listenedMs
+    FROM play_events e1
+    WHERE e1.eventType = 'playback' AND e1.year = :year AND e1.loopCount > 1
+    GROUP BY canonicalId
+    ORDER BY loops DESC, listenedMs DESC
+    LIMIT :limit
+    """
+  )
+  suspend fun loopRanking(year: Int, limit: Int): List<LoopItem>
+
+  // P1：流派占比
+  @Query(
+    """
+    SELECT genreSnapshot AS genre, COUNT(*) AS plays, COALESCE(SUM(listenedMs), 0) AS listenedMs
+    FROM play_events
+    WHERE eventType = 'playback' AND year = :year
+      AND genreSnapshot IS NOT NULL AND genreSnapshot != ''
+    GROUP BY genreSnapshot
+    ORDER BY listenedMs DESC
+    LIMIT :limit
+    """
+  )
+  suspend fun genreBreakdown(year: Int, limit: Int): List<GenreCount>
+
+  // P1：深夜最常听（0-5 点）
+  @Query(
+    """
+    SELECT canonicalId AS canonicalId,
+      MAX(audioId) AS audioId,
+      (SELECT titleSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS title,
+      (SELECT artistSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS artist,
+      (SELECT albumSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS album,
+      COALESCE(SUM(listenedMs), 0) AS listenedMs,
+      COALESCE(SUM(playScore), 0) AS playScore,
+      COUNT(*) AS plays
+    FROM play_events e1
+    WHERE e1.eventType = 'playback' AND e1.year = :year AND e1.hour BETWEEN 0 AND 5
+    GROUP BY canonicalId
+    ORDER BY listenedMs DESC
+    LIMIT :limit
+    """
+  )
+  suspend fun lateNightTopSongs(year: Int, limit: Int): List<TopPlayItem>
 
   @Query("SELECT COUNT(*) FROM play_events")
   suspend fun countAll(): Int
@@ -211,7 +288,37 @@ data class MonthCount(
 
 data class HourCount(
   val hour: Int,
-  val plays: Int
+  val plays: Int,
+  val listenedMs: Long
+)
+
+data class WeekdayCount(
+  val weekday: Int,
+  val plays: Int,
+  val listenedMs: Long
+)
+
+data class DayCount(
+  val month: Int,
+  val day: Int,
+  val plays: Int,
+  val listenedMs: Long
+)
+
+data class LoopItem(
+  val canonicalId: String,
+  val audioId: Long?,
+  val title: String,
+  val artist: String,
+  val album: String,
+  val loops: Int,
+  val listenedMs: Long
+)
+
+data class GenreCount(
+  val genre: String,
+  val plays: Int,
+  val listenedMs: Long
 )
 
 data class SourceCount(

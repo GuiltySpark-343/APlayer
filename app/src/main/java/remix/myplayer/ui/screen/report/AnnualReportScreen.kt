@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import remix.myplayer.R
+import remix.myplayer.data.db.room.dao.DayCount
 import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.data.model.report.SongMoment
 import remix.myplayer.ui.theme.LocalTheme
@@ -40,6 +42,7 @@ import remix.myplayer.ui.widget.common.CommonAppBar
 import remix.myplayer.ui.widget.common.TextPrimary
 import remix.myplayer.ui.widget.common.TextSecondary
 import remix.myplayer.viewmodel.annualReportViewModel
+import java.util.Calendar
 
 @Composable
 fun AnnualReportScreen() {
@@ -92,6 +95,10 @@ fun AnnualReportScreen() {
         MetricCard(report)
         Spacer(Modifier.height(8.dp))
         ExtraMetricCard(report)
+        state.previousReport?.let {
+          Spacer(Modifier.height(8.dp))
+          CompareCard(report, it)
+        }
         Spacer(Modifier.height(8.dp))
         MomentsCard(report)
         Spacer(Modifier.height(8.dp))
@@ -101,9 +108,19 @@ fun AnnualReportScreen() {
         Spacer(Modifier.height(8.dp))
         TopAlbumsCard(report)
         Spacer(Modifier.height(8.dp))
-        MonthCard(report)
+        TrendCard(report)
         Spacer(Modifier.height(8.dp))
         HourCard(report)
+        Spacer(Modifier.height(8.dp))
+        WeekdayCard(report)
+        Spacer(Modifier.height(8.dp))
+        HeatmapCard(report)
+        Spacer(Modifier.height(8.dp))
+        LateNightCard(report)
+        Spacer(Modifier.height(8.dp))
+        LoopCard(report)
+        Spacer(Modifier.height(8.dp))
+        GenreCard(report)
         Spacer(Modifier.height(8.dp))
         SourceCard(report)
         Spacer(Modifier.height(8.dp))
@@ -183,7 +200,56 @@ private fun ExtraMetricCard(report: AnnualReport) {
     ) {
       MetricItem(stringResource(R.string.stat_repeat), "%.2f".format(repeat))
       MetricItem(stringResource(R.string.stat_explore), formatPercent(explore))
+      MetricItem(
+        stringResource(R.string.stat_streak),
+        longestStreak(report.year, report.dailyDistribution).toString()
+      )
     }
+  }
+}
+
+@Composable
+private fun CompareCard(current: AnnualReport, previous: AnnualReport) {
+  SectionCard(title = stringResource(R.string.stat_compare) + " (" + previous.year + ")") {
+    CompareRow(stringResource(R.string.stat_plays), previous.plays.toLong(), current.plays.toLong())
+    CompareRow(
+      stringResource(R.string.stat_listen_ms),
+      previous.listenMs,
+      current.listenMs
+    ) { formatTime(it) }
+    CompareRow(
+      stringResource(R.string.stat_completed),
+      previous.completedPlays.toLong(),
+      current.completedPlays.toLong()
+    )
+    CompareRow(
+      stringResource(R.string.stat_songs),
+      previous.distinctSongs.toLong(),
+      current.distinctSongs.toLong()
+    )
+  }
+}
+
+@Composable
+private fun CompareRow(
+  label: String,
+  lastValue: Long,
+  thisValue: Long,
+  format: (Long) -> String = { it.toString() }
+) {
+  val delta = thisValue - lastValue
+  Row(
+    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    TextSecondary(text = label, fontSize = 13.sp, modifier = Modifier.weight(1f))
+    TextPrimary(text = format(lastValue), fontSize = 13.sp)
+    TextSecondary(text = " -> ", fontSize = 13.sp)
+    TextPrimary(text = format(thisValue), fontSize = 13.sp)
+    TextSecondary(
+      text = if (delta >= 0) "  +" + format(delta) else "  " + format(delta),
+      fontSize = 12.sp
+    )
   }
 }
 
@@ -191,15 +257,11 @@ private fun ExtraMetricCard(report: AnnualReport) {
 private fun MomentsCard(report: AnnualReport) {
   if (report.firstPlay == null && report.lastPlay == null) return
   SectionCard {
-    report.firstPlay?.let {
-      MomentRow(stringResource(R.string.stat_first_song), it)
-    }
+    report.firstPlay?.let { MomentRow(stringResource(R.string.stat_first_song), it) }
     if (report.firstPlay != null && report.lastPlay != null) {
       Spacer(Modifier.height(8.dp))
     }
-    report.lastPlay?.let {
-      MomentRow(stringResource(R.string.stat_last_song), it)
-    }
+    report.lastPlay?.let { MomentRow(stringResource(R.string.stat_last_song), it) }
   }
 }
 
@@ -259,7 +321,7 @@ private fun RankRow(rank: Int, title: String, subtitle: String, listenMs: Long, 
       .padding(vertical = 6.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
-    TextPrimary(text = "$rank", fontSize = 16.sp, color = LocalTheme.current.secondary)
+    TextPrimary(text = rank.toString(), fontSize = 16.sp, color = LocalTheme.current.secondary)
     Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
       TextPrimary(text = title, fontSize = 15.sp)
       if (subtitle.isNotBlank()) {
@@ -268,27 +330,41 @@ private fun RankRow(rank: Int, title: String, subtitle: String, listenMs: Long, 
     }
     Column(horizontalAlignment = Alignment.End) {
       TextPrimary(text = formatTime(listenMs), fontSize = 13.sp)
-      TextSecondary(text = "$plays x", fontSize = 12.sp)
+      TextSecondary(text = plays.toString() + " x", fontSize = 12.sp)
     }
   }
 }
 
 @Composable
-private fun MonthCard(report: AnnualReport) {
+private fun TrendCard(report: AnnualReport) {
   if (report.monthDistribution.isEmpty()) return
-  SectionCard(title = stringResource(R.string.stat_months)) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-      report.monthDistribution.forEach { m ->
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-          TextPrimary(text = m.month.toString(), fontSize = 14.sp)
-          TextSecondary(text = m.plays.toString(), fontSize = 12.sp)
+  val maxMs = report.monthDistribution.maxOf { it.listenedMs }.coerceAtLeast(1L)
+  val byMonth = HashMap<Int, Long>()
+  report.monthDistribution.forEach { byMonth[it.month] = it.listenedMs }
+  SectionCard(title = stringResource(R.string.stat_trend)) {
+    Row(
+      modifier = Modifier.fillMaxWidth().height(64.dp),
+      verticalAlignment = Alignment.Bottom,
+      horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+      (1..12).forEach { month ->
+        val ms = byMonth[month] ?: 0L
+        Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+          Box(
+            modifier = Modifier
+              .width(8.dp)
+              .height((44f * ms / maxMs).coerceAtLeast(if (ms > 0) 2f else 1f).dp)
+              .background(
+                if (ms > 0) LocalTheme.current.primary else LocalTheme.current.textSecondary
+              )
+          )
+          TextSecondary(text = month.toString(), fontSize = 8.sp)
         }
       }
     }
   }
 }
 
-/** R3：时段分布（0-23 点柱状） */
 @Composable
 private fun HourCard(report: AnnualReport) {
   if (report.hourDistribution.isEmpty()) return
@@ -303,10 +379,7 @@ private fun HourCard(report: AnnualReport) {
       horizontalArrangement = Arrangement.SpaceBetween
     ) {
       counts.forEachIndexed { hour, count ->
-        Column(
-          modifier = Modifier.weight(1f),
-          horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
           Box(
             modifier = Modifier
               .width(5.dp)
@@ -315,11 +388,151 @@ private fun HourCard(report: AnnualReport) {
                 if (count > 0) LocalTheme.current.primary else LocalTheme.current.textSecondary
               )
           )
-          TextSecondary(
-            text = if (hour % 6 == 0) hour.toString() else "",
-            fontSize = 9.sp
+          TextSecondary(text = if (hour % 6 == 0) hour.toString() else "", fontSize = 9.sp)
+        }
+      }
+    }
+  }
+}
+
+@Composable
+private fun WeekdayCard(report: AnnualReport) {
+  if (report.weekdayDistribution.isEmpty()) return
+  val labels = listOf(
+    stringResource(R.string.weekday_sun),
+    stringResource(R.string.weekday_mon),
+    stringResource(R.string.weekday_tue),
+    stringResource(R.string.weekday_wed),
+    stringResource(R.string.weekday_thu),
+    stringResource(R.string.weekday_fri),
+    stringResource(R.string.weekday_sat)
+  )
+  val byWeekday = HashMap<Int, Int>()
+  report.weekdayDistribution.forEach { byWeekday[it.weekday] = it.plays }
+  val maxPlays = (1..7).maxOf { byWeekday[it] ?: 0 }.coerceAtLeast(1)
+
+  SectionCard(title = stringResource(R.string.stat_weekday)) {
+    Row(
+      modifier = Modifier.fillMaxWidth().height(56.dp),
+      verticalAlignment = Alignment.Bottom,
+      horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+      (1..7).forEach { weekday ->
+        val count = byWeekday[weekday] ?: 0
+        Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+          Box(
+            modifier = Modifier
+              .width(14.dp)
+              .height((36f * count / maxPlays).coerceAtLeast(if (count > 0) 2f else 1f).dp)
+              .background(
+                if (count > 0) LocalTheme.current.primary else LocalTheme.current.textSecondary
+              )
+          )
+          TextSecondary(text = labels[weekday - 1], fontSize = 10.sp)
+        }
+      }
+    }
+  }
+}
+
+@Composable
+private fun HeatmapCard(report: AnnualReport) {
+  if (report.dailyDistribution.isEmpty()) return
+  val byDay = HashMap<Pair<Int, Int>, Long>()
+  report.dailyDistribution.forEach { byDay[it.month to it.day] = it.listenedMs }
+  val maxMs = report.dailyDistribution.maxOf { it.listenedMs }.coerceAtLeast(1L)
+  val daysInMonth = intArrayOf(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+
+  SectionCard(title = stringResource(R.string.stat_heatmap)) {
+    for (month in 1..12) {
+      Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        TextSecondary(
+          text = "%02d".format(month),
+          fontSize = 9.sp,
+          modifier = Modifier.width(20.dp)
+        )
+        for (day in 1..daysInMonth[month - 1]) {
+          val ms = byDay[month to day] ?: 0L
+          val alpha = if (ms <= 0) 0.08f else (0.25f + 0.75f * ms / maxMs).toFloat()
+          Box(
+            modifier = Modifier
+              .padding(0.5.dp)
+              .size(7.dp)
+              .background(LocalTheme.current.primary.copy(alpha = alpha))
           )
         }
+      }
+    }
+  }
+}
+
+@Composable
+private fun LateNightCard(report: AnnualReport) {
+  val late = report.hourDistribution.filter { it.hour in 0..5 }
+  val latePlays = late.sumOf { it.plays }
+  val lateMs = late.sumOf { it.listenedMs }
+  if (latePlays == 0) return
+  val ratio = if (report.plays > 0) latePlays.toDouble() / report.plays else 0.0
+
+  SectionCard(title = stringResource(R.string.stat_late_night)) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+      MetricItem(stringResource(R.string.stat_late_night_ratio), formatPercent(ratio))
+      MetricItem(stringResource(R.string.stat_listen_ms), formatTime(lateMs))
+      MetricItem(stringResource(R.string.stat_plays), latePlays.toString())
+    }
+    if (report.lateNightTopSongs.isNotEmpty()) {
+      Spacer(Modifier.height(8.dp))
+      TextSecondary(text = stringResource(R.string.stat_late_night_top), fontSize = 12.sp)
+      report.lateNightTopSongs.take(3).forEachIndexed { index, item ->
+        RankRow(index + 1, item.title, item.artist, item.listenedMs, item.plays)
+      }
+    }
+  }
+}
+
+@Composable
+private fun LoopCard(report: AnnualReport) {
+  if (report.loopTop.isEmpty()) return
+  SectionCard(title = stringResource(R.string.stat_loop_top)) {
+    report.loopTop.take(5).forEachIndexed { index, item ->
+      Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        TextPrimary(
+          text = (index + 1).toString(),
+          fontSize = 16.sp,
+          color = LocalTheme.current.secondary
+        )
+        Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+          TextPrimary(text = item.title, fontSize = 15.sp)
+          if (item.artist.isNotBlank()) {
+            TextSecondary(text = item.artist, fontSize = 12.sp)
+          }
+        }
+        TextPrimary(text = item.loops.toString() + " x", fontSize = 13.sp)
+      }
+    }
+  }
+}
+
+@Composable
+private fun GenreCard(report: AnnualReport) {
+  if (report.genreBreakdown.isEmpty()) return
+  SectionCard(title = stringResource(R.string.stat_genre)) {
+    report.genreBreakdown.forEach { g ->
+      Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+      ) {
+        TextPrimary(text = g.genre, fontSize = 14.sp)
+        TextSecondary(
+          text = g.plays.toString() + "  ·  " + formatTime(g.listenedMs),
+          fontSize = 12.sp
+        )
       }
     }
   }
@@ -403,3 +616,26 @@ private fun formatTime(ms: Long): String {
 }
 
 private fun formatPercent(value: Double): String = "%.0f%%".format(value * 100)
+
+private fun longestStreak(year: Int, days: List<DayCount>): Int {
+  if (days.isEmpty()) return 0
+  val set = days.map { it.month to it.day }.toHashSet()
+  val cal = Calendar.getInstance().apply {
+    clear()
+    set(year, Calendar.JANUARY, 1)
+  }
+  val daysInYear = if (cal.getActualMaximum(Calendar.DAY_OF_YEAR) >= 366) 366 else 365
+  var best = 0
+  var current = 0
+  repeat(daysInYear) {
+    val key = (cal.get(Calendar.MONTH) + 1) to cal.get(Calendar.DAY_OF_MONTH)
+    if (set.contains(key)) {
+      current++
+      if (current > best) best = current
+    } else {
+      current = 0
+    }
+    cal.add(Calendar.DAY_OF_MONTH, 1)
+  }
+  return best
+}
