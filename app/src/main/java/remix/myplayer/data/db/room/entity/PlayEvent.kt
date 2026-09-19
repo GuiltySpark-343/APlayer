@@ -19,7 +19,8 @@ import androidx.room.PrimaryKey
     Index(value = ["audioId"]),
     Index(value = ["source"]),
     Index(value = ["startedAt"]),
-    Index(value = ["eventType"])
+    Index(value = ["eventType"]),
+    Index(value = ["eventId"], unique = true)
   ]
 )
 data class PlayEvent(

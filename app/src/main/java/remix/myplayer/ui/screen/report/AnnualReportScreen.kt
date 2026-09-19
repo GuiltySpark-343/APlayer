@@ -4,6 +4,8 @@ package remix.myplayer.ui.screen.report
 
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +51,14 @@ fun AnnualReportScreen() {
   val viewModel = annualReportViewModel
   val state by viewModel.state.collectAsStateWithLifecycle()
   val context = LocalContext.current
+
+  val importLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.GetContent()
+  ) { uri ->
+    if (uri != null) {
+      viewModel.importJsonl(uri)
+    }
+  }
 
   LaunchedEffect(Unit) {
     viewModel.load()
@@ -127,6 +137,7 @@ fun AnnualReportScreen() {
         ActionRow(
           onGeneratePlaylist = viewModel::generatePlaylist,
           onExport = viewModel::exportJsonl,
+          onImport = { importLauncher.launch("*/*") },
           onClear = viewModel::clear
         )
         Spacer(Modifier.height(24.dp))
@@ -568,12 +579,14 @@ private fun sourceLabel(source: String): String = when (source) {
 private fun ActionRow(
   onGeneratePlaylist: () -> Unit,
   onExport: () -> Unit,
+  onImport: () -> Unit,
   onClear: () -> Unit
 ) {
   Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
     SectionButton(text = stringResource(R.string.generate_playlist), onClick = onGeneratePlaylist)
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
       SectionButton(text = stringResource(R.string.export_jsonl), onClick = onExport)
+      SectionButton(text = stringResource(R.string.import_jsonl), onClick = onImport)
       SectionButton(text = stringResource(R.string.clear_play_stats), onClick = onClear)
     }
   }

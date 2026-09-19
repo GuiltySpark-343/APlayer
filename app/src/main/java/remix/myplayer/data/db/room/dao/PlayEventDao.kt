@@ -3,6 +3,7 @@ package remix.myplayer.data.db.room.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.OnConflictStrategy.Companion.IGNORE
 import androidx.room.OnConflictStrategy.Companion.REPLACE
 import remix.myplayer.data.db.room.entity.PlayEvent
 
@@ -11,6 +12,10 @@ interface PlayEventDao {
 
   @Insert(onConflict = REPLACE)
   suspend fun insert(event: PlayEvent): Long
+
+  /** 导入用：按 eventId 幂等插入（冲突忽略）。返回 rowId，-1 表示已存在被忽略。 */
+  @Insert(onConflict = IGNORE)
+  suspend fun insertIgnore(event: PlayEvent): Long
 
   // 导出用：包税全部事件类型（playback + song_added）
   @Query("SELECT * FROM play_events WHERE year = :year ORDER BY startedAt DESC")

@@ -625,4 +625,7 @@
   <string name="weekday_thu">四</string>
   <string name="weekday_fri">五</string>
   <string name="weekday_sat">六</string>
+  <string name="import_jsonl">导入 JSONL</string>
+  <string name="import_events_success">已导入 %1$d 条播放事件</string>
+  <string name="import_events_failed">未导入任何事件（文件为空或格式不符）</string>
 </resources>

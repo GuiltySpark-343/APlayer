@@ -98,6 +98,90 @@ class AnnualReportViewModel @Inject constructor(
     _state.value = _state.value.copy(exportIntent = null)
   }
 
+  /** M3：从 JSONL 导入播放事件（按 eventId 幂等合并）。 */
+  fun importJsonl(uri: Uri) {
+    viewModelScope.launch {
+      val imported = withContext(Dispatchers.IO) {
+        val events = runCatching { parseJsonl(uri) }.getOrElse { emptyList() }
+        if (events.isEmpty()) 0 else playEventRepository.importEvents(events)
+      }
+      if (imported > 0) {
+        MessageNotifier.show(R.string.import_events_success, imported)
+        load()
+      } else {
+        MessageNotifier.show(R.string.import_events_failed)
+      }
+    }
+  }
+
+  private fun parseJsonl(uri: Uri): List<PlayEvent> {
+    val json = Json { ignoreUnknownKeys = true; isLenient = true }
+    val result = ArrayList<PlayEvent>()
+    val stream = context.contentResolver.openInputStream(uri) ?: return result
+    stream.bufferedReader().useLines { lines ->
+      lines.forEach { line ->
+        if (line.isBlank()) return@forEach
+        val export = runCatching {
+          json.decodeFromString(PlayEventExport.serializer(), line)
+        }.getOrNull() ?: return@forEach
+        val startedAt = parseIso(export.startedAt) ?: return@forEach
+        val endedAt = parseIso(export.endedAt) ?: startedAt
+        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = startedAt }
+        result.add(
+          PlayEvent(
+            schemaVersion = export.schemaVersion,
+            eventId = export.eventId,
+            deviceId = export.deviceId,
+            eventType = export.eventType,
+            canonicalId = export.track.canonicalId,
+            audioId = null,
+            startedAt = startedAt,
+            endedAt = endedAt,
+            durationMs = export.durationMs,
+            listenedMs = export.listenedMs,
+            listenRatio = export.listenRatio,
+            playScore = export.playScore,
+            completed = export.completed,
+            source = export.source,
+            endReason = export.endReason,
+            titleSnapshot = export.track.title,
+            artistSnapshot = export.track.artist,
+            albumSnapshot = export.track.album,
+            genreSnapshot = null,
+            sourceUri = null,
+            contentHash = null,
+            pathHint = null,
+            year = cal.get(Calendar.YEAR),
+            month = cal.get(Calendar.MONTH) + 1,
+            day = cal.get(Calendar.DAY_OF_MONTH),
+            hour = cal.get(Calendar.HOUR_OF_DAY),
+            weekday = cal.get(Calendar.DAY_OF_WEEK),
+            songId = export.songId,
+            artistId = export.artistId,
+            albumId = export.albumId,
+            genreId = export.genreId,
+            playlistId = export.playlistId,
+            mediaType = export.mediaType,
+            sessionId = export.sessionId,
+            gapBeforeMs = export.gapBeforeMs,
+            gapAfterMs = export.gapAfterMs,
+            loopCount = export.loopCount,
+            outputDevice = export.outputDevice,
+            isForeground = export.isForeground,
+            decoder = export.decoder
+          )
+        )
+      }
+    }
+    return result
+  }
+
+  private fun parseIso(value: String): Long? = runCatching {
+    SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
+      timeZone = TimeZone.getTimeZone("UTC")
+    }.parse(value)?.time
+  }.getOrNull()
+
   /** R10：把年度 TOP 歌曲生成为一个本地歌单。 */
   fun generatePlaylist() {
     viewModelScope.launch {

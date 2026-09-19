@@ -99,4 +99,12 @@ internal object DbMigrations {
       db.execSQL("CREATE INDEX IF NOT EXISTS `index_play_events_eventType` ON `play_events` (`eventType`)")
     }
   }
+
+  val migration9to10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      // 先去掉可能存在的重复 eventId，再建立唯一索引（用于导入幂等）
+      db.execSQL("DELETE FROM `play_events` WHERE `id` NOT IN (SELECT MIN(`id`) FROM `play_events` GROUP BY `eventId`)")
+      db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_play_events_eventId` ON `play_events` (`eventId`)")
+    }
+  }
 }

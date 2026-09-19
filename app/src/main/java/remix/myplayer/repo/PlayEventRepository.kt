@@ -17,6 +17,9 @@ interface PlayEventRepository {
   /** 若该 canonicalId 尚无 song_added 事件，则登记一条。 */
   suspend fun recordSongAddedIfAbsent(event: PlayEvent)
 
+  /** M3：导入事件（按 eventId 幂等），返回实际写入条数。 */
+  suspend fun importEvents(events: List<PlayEvent>): Int
+
   suspend fun availableYears(): List<Int>
 
   suspend fun annualReport(year: Int): AnnualReport
@@ -39,6 +42,16 @@ class PlayEventRepoImpl @Inject constructor(
     if (playEventDao.countSongAdded(event.canonicalId) == 0) {
       playEventDao.insert(event)
     }
+  }
+
+  override suspend fun importEvents(events: List<PlayEvent>): Int {
+    var imported = 0
+    events.forEach { event ->
+      if (playEventDao.insertIgnore(event) != -1L) {
+        imported++
+      }
+    }
+    return imported
   }
 
   override suspend fun availableYears(): List<Int> = playEventDao.distinctYears()

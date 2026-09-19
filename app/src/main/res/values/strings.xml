@@ -643,4 +643,7 @@
   <string name="weekday_thu">T</string>
   <string name="weekday_fri">F</string>
   <string name="weekday_sat">S</string>
+  <string name="import_jsonl">Import JSONL</string>
+  <string name="import_events_success">Imported %1$d events</string>
+  <string name="import_events_failed">No events imported</string>
 </resources>
