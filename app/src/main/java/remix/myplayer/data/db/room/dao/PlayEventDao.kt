@@ -89,6 +89,7 @@ interface PlayEventDao {
   @Query(
     """
     SELECT canonicalId AS canonicalId,
+      MAX(audioId) AS audioId,
       (SELECT titleSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS title,
       (SELECT artistSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS artist,
       (SELECT albumSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS album,
@@ -179,6 +180,7 @@ interface PlayEventDao {
 
 data class TopPlayItem(
   val canonicalId: String,
+  val audioId: Long?,
   val title: String,
   val artist: String,
   val album: String,

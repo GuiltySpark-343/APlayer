@@ -17,8 +17,11 @@ import kotlinx.serialization.json.Json
 import remix.myplayer.data.db.room.entity.PlayEvent
 import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.data.model.report.PlayEventExport
+import remix.myplayer.R
 import remix.myplayer.data.model.report.TrackExport
 import remix.myplayer.repo.PlayEventRepository
+import remix.myplayer.repo.PlayListRepository
+import remix.myplayer.ui.nav.MessageNotifier
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -29,6 +32,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AnnualReportViewModel @Inject constructor(
   private val playEventRepository: PlayEventRepository,
+  private val playListRepository: PlayListRepository,
   @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -84,6 +88,27 @@ class AnnualReportViewModel @Inject constructor(
 
   fun consumeExportIntent() {
     _state.value = _state.value.copy(exportIntent = null)
+  }
+
+  /** R10：把年度 TOP 歌曲生成为一个本地歌单。 */
+  fun generatePlaylist() {
+    viewModelScope.launch {
+      val year = _state.value.year ?: return@launch
+      val report = _state.value.report ?: return@launch
+      val audioIds = report.topSongs.mapNotNull { it.audioId }.distinct()
+      if (audioIds.isEmpty()) {
+        MessageNotifier.show(R.string.no_play_stat_data)
+        return@launch
+      }
+      val name = context.getString(R.string.annual_playlist_name, year)
+      withContext(Dispatchers.IO) {
+        if (!playListRepository.checkPlayListExist(name)) {
+          playListRepository.insertPlayList(name)
+        }
+        playListRepository.addSongsToPlayList(audioIds, name)
+      }
+      MessageNotifier.show(R.string.playlist_generated, name)
+    }
   }
 
   private suspend fun writeAndShare(events: List<PlayEvent>): Intent? = withContext(Dispatchers.IO) {

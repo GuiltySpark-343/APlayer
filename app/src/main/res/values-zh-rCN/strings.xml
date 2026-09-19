@@ -587,4 +587,22 @@
   <string name="play_stat_enabled">播放统计</string>
   <string name="play_stat_enabled_desc">记录播放事件以生成年度报告</string>
   <string name="confirm_clear_play_stats">确定清除所有播放统计数据？</string>
+  <!-- 年度报告 P0 补充 -->
+  <string name="stat_added_songs">新增歌曲</string>
+  <string name="stat_skip_rate">跳过率</string>
+  <string name="stat_complete_rate">完整率</string>
+  <string name="stat_repeat">重复度</string>
+  <string name="stat_explore">探索度</string>
+  <string name="stat_hours">时段分布</string>
+  <string name="stat_first_song">年度第一首</string>
+  <string name="stat_last_song">年度最后一首</string>
+  <string name="generate_playlist">生成年度歌单</string>
+  <string name="annual_playlist_name">%1$d 年度歌单</string>
+  <string name="playlist_generated">已生成歌单：%1$s</string>
+  <string name="source_search">搜索</string>
+  <string name="source_library">曲库</string>
+  <string name="source_playlist">歌单</string>
+  <string name="source_queue_auto">自动播放</string>
+  <string name="source_resume">恢复播放</string>
+  <string name="source_external">外部打开</string>
 </resources>
