@@ -646,4 +646,26 @@
   <string name="import_jsonl">Import JSONL</string>
   <string name="import_events_success">Imported %1$d events</string>
   <string name="import_events_failed">No events imported</string>
+  <!-- Annual report P2: share card / story -->
+  <string name="share_card">Share Card</string>
+  <string name="poster_subtitle">Annual Listening Report</string>
+  <string name="poster_footer">APlayer · Annual Report</string>
+  <string name="poster_metric_plays">Plays</string>
+  <string name="poster_metric_time">Listened</string>
+  <string name="poster_metric_days">Days</string>
+  <string name="poster_metric_complete">Completion</string>
+  <string name="poster_top_songs">Top Songs</string>
+  <string name="poster_top_artists">Top Artists</string>
+  <string name="story_template">You listened for %1$s across %2$d songs this year, most often starting at %3$d o\'clock, and %4$d songs were first meetings.</string>
+  <string name="story_template_night">You listened for %1$s across %2$d songs this year, and %4$d songs were first meetings.</string>
+  <string name="kw_night_owl">Night Owl</string>
+  <string name="kw_loop_lover">Loop Lover</string>
+  <string name="kw_explorer">Explorer</string>
+  <string name="kw_picky_ears">Picky Ears</string>
+  <string name="kw_immersive">Immersive</string>
+  <string name="kw_chill_listener">Chill Listener</string>
+  <string name="kw_new_chaser">Trend Chaser</string>
+  <string name="kw_default">Music Traveler</string>
+  <string name="poster_hours">%1$.1f h</string>
+  <string name="poster_minutes">%1$d min</string>
 </resources>

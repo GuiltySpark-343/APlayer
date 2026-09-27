@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,8 +31,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,6 +73,37 @@ fun AnnualReportScreen() {
     if (intent != null) {
       context.startActivity(Intent.createChooser(intent, null))
       viewModel.consumeExportIntent()
+    }
+  }
+
+  LaunchedEffect(state.sharePosterIntent) {
+    val intent = state.sharePosterIntent
+    if (intent != null) {
+      context.startActivity(Intent.createChooser(intent, null))
+      viewModel.consumeSharePosterIntent()
+    }
+  }
+
+  state.posterBitmap?.let { poster ->
+    Dialog(onDismissRequest = { viewModel.dismissPoster() }) {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .background(LocalTheme.current.mainBackground)
+          .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+      ) {
+        Image(
+          bitmap = poster.asImageBitmap(),
+          contentDescription = null,
+          contentScale = ContentScale.Fit,
+          modifier = Modifier.fillMaxWidth().height(440.dp)
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+          SectionButton(text = stringResource(R.string.share)) { viewModel.sharePoster() }
+          SectionButton(text = stringResource(R.string.close)) { viewModel.dismissPoster() }
+        }
+      }
     }
   }
 
@@ -136,6 +171,7 @@ fun AnnualReportScreen() {
         Spacer(Modifier.height(8.dp))
         ActionRow(
           onGeneratePlaylist = viewModel::generatePlaylist,
+          onShareCard = viewModel::generatePoster,
           onExport = viewModel::exportJsonl,
           onImport = { importLauncher.launch("*/*") },
           onClear = viewModel::clear
@@ -578,12 +614,16 @@ private fun sourceLabel(source: String): String = when (source) {
 @Composable
 private fun ActionRow(
   onGeneratePlaylist: () -> Unit,
+  onShareCard: () -> Unit,
   onExport: () -> Unit,
   onImport: () -> Unit,
   onClear: () -> Unit
 ) {
   Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
-    SectionButton(text = stringResource(R.string.generate_playlist), onClick = onGeneratePlaylist)
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+      SectionButton(text = stringResource(R.string.generate_playlist), onClick = onGeneratePlaylist)
+      SectionButton(text = stringResource(R.string.share_card), onClick = onShareCard)
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
       SectionButton(text = stringResource(R.string.export_jsonl), onClick = onExport)
       SectionButton(text = stringResource(R.string.import_jsonl), onClick = onImport)

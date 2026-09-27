@@ -628,4 +628,26 @@
   <string name="import_jsonl">导入 JSONL</string>
   <string name="import_events_success">已导入 %1$d 条播放事件</string>
   <string name="import_events_failed">未导入任何事件（文件为空或格式不符）</string>
+  <!-- 年度报告 P2：分享卡片 / 文案 -->
+  <string name="share_card">分享卡片</string>
+  <string name="poster_subtitle">年度听歌报告</string>
+  <string name="poster_footer">APlayer · 年度听歌报告</string>
+  <string name="poster_metric_plays">播放次数</string>
+  <string name="poster_metric_time">收听时长</string>
+  <string name="poster_metric_days">听歌天数</string>
+  <string name="poster_metric_complete">完整率</string>
+  <string name="poster_top_songs">TOP 歌曲</string>
+  <string name="poster_top_artists">TOP 歌手</string>
+  <string name="story_template">今年你听了 %1$s，共 %2$d 首歌，最常在 %3$d 点按下播放，其中 %4$d 首是第一次遇见。</string>
+  <string name="story_template_night">今年你听了 %1$s，共 %2$d 首歌，有 %4$d 首是第一次遇见。</string>
+  <string name="kw_night_owl">夜猫子</string>
+  <string name="kw_loop_lover">单曲循环狂</string>
+  <string name="kw_explorer">探索者</string>
+  <string name="kw_picky_ears">挑剔的耳朵</string>
+  <string name="kw_immersive">沉浸式聆听</string>
+  <string name="kw_chill_listener">佛系听众</string>
+  <string name="kw_new_chaser">追新族</string>
+  <string name="kw_default">音乐旅人</string>
+  <string name="poster_hours">%1$.1f 小时</string>
+  <string name="poster_minutes">%1$d 分钟</string>
 </resources>

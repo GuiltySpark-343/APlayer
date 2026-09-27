@@ -2,6 +2,7 @@ package remix.myplayer.viewmodel
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
@@ -22,7 +23,11 @@ import remix.myplayer.data.model.report.TrackExport
 import remix.myplayer.repo.PlayEventRepository
 import remix.myplayer.repo.PlayListRepository
 import remix.myplayer.ui.nav.MessageNotifier
+import remix.myplayer.ui.screen.report.ReportPoster
+import remix.myplayer.ui.screen.report.ReportStory
+import remix.myplayer.util.Util
 import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -96,6 +101,54 @@ class AnnualReportViewModel @Inject constructor(
 
   fun consumeExportIntent() {
     _state.value = _state.value.copy(exportIntent = null)
+  }
+
+  /** P2：生成年度报告海报（预览用）。 */
+  fun generatePoster() {
+    viewModelScope.launch {
+      val report = _state.value.report ?: return@launch
+      if (report.plays <= 0) {
+        MessageNotifier.show(R.string.no_play_stat_data)
+        return@launch
+      }
+      val bitmap = withContext(Dispatchers.IO) {
+        ReportPoster.render(context, report, ReportStory.analyze(report))
+      }
+      _state.value = _state.value.copy(posterBitmap = bitmap)
+    }
+  }
+
+  fun dismissPoster() {
+    _state.value = _state.value.copy(posterBitmap = null)
+  }
+
+  /** P2：把海报存盘并返回分享 Intent。 */
+  fun sharePoster() {
+    viewModelScope.launch {
+      val bitmap = _state.value.posterBitmap ?: return@launch
+      val year = _state.value.year ?: return@launch
+      val intent = withContext(Dispatchers.IO) { savePoster(bitmap, year) }
+      if (intent == null) {
+        MessageNotifier.show(R.string.import_events_failed)
+      } else {
+        _state.value = _state.value.copy(sharePosterIntent = intent)
+      }
+    }
+  }
+
+  fun consumeSharePosterIntent() {
+    _state.value = _state.value.copy(sharePosterIntent = null)
+  }
+
+  private fun savePoster(bitmap: Bitmap, year: Int): Intent? {
+    return runCatching {
+      val dir = File(context.externalCacheDir ?: context.cacheDir, "share").apply { mkdirs() }
+      val file = File(dir, "annual-report-" + year + ".png")
+      FileOutputStream(file).use { out ->
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+      }
+      Util.createShareImageFileIntent(file, context)
+    }.getOrNull()
   }
 
   /** M3：从 JSONL 导入播放事件（按 eventId 幂等合并）。 */
@@ -279,6 +332,8 @@ data class ReportUiState(
   val year: Int? = null,
   val report: AnnualReport? = null,
   val previousReport: AnnualReport? = null,
+  val posterBitmap: Bitmap? = null,
+  val sharePosterIntent: Intent? = null,
   val loading: Boolean = true,
   val exportIntent: Intent? = null,
   val exportRequestId: Int = 0
