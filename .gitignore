@@ -13,3 +13,12 @@
 /.vercel
 /.kotlin
 *.txt
+# Research extracts must be tracked, overriding *.txt above
+!docs/research/raw/*.txt
+
+# Local build outputs and scratch scripts
+/Aplayer.apk
+/backups/
+/session-recovery/
+/.probe*.py
+/.poster_*.py
