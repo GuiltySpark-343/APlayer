@@ -136,7 +136,7 @@ private fun AnnualReportContent() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
       ) {
-        TextSecondary(text = stringResource(R.string.no_play_stat_data), fontSize = 16.sp)
+        TextSecondary(text = stringResource(R.string.no_play_stat_data), fontSize = LocalReportTokens.current.titleSize)
       }
       return@Scaffold
     }
@@ -150,6 +150,13 @@ private fun AnnualReportContent() {
             onSelect = viewModel::selectYear
           )
         }
+        Spacer(Modifier.height(tokens.sectionGap))
+        // 这一页是"全部数据"附录，给个明确标识，避免和叙事流混淆
+        TextSecondary(
+          text = stringResource(R.string.story_all_data),
+          fontSize = tokens.captionSize,
+          modifier = Modifier.padding(horizontal = tokens.pagePadding)
+        )
         Spacer(Modifier.height(tokens.sectionGap))
         MetricCard(report)
         Spacer(Modifier.height(tokens.sectionGap))
@@ -203,7 +210,7 @@ private fun YearSelector(years: List<Int>, selected: Int, onSelect: (Int) -> Uni
       val isSelected = year == selected
       TextPrimary(
         text = year.toString(),
-        fontSize = 16.sp,
+        fontSize = LocalReportTokens.current.titleSize,
         color = if (isSelected) LocalTheme.current.primary else LocalTheme.current.textSecondary,
         modifier = Modifier
           .padding(8.dp)
@@ -305,13 +312,13 @@ private fun CompareRow(
     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
-    TextSecondary(text = label, fontSize = 13.sp, modifier = Modifier.weight(1f))
-    TextPrimary(text = format(lastValue), fontSize = 13.sp)
-    TextSecondary(text = " -> ", fontSize = 13.sp)
-    TextPrimary(text = format(thisValue), fontSize = 13.sp)
+    TextSecondary(text = label, fontSize = LocalReportTokens.current.bodySize, modifier = Modifier.weight(1f))
+    TextPrimary(text = format(lastValue), fontSize = LocalReportTokens.current.bodySize)
+    TextSecondary(text = " -> ", fontSize = LocalReportTokens.current.bodySize)
+    TextPrimary(text = format(thisValue), fontSize = LocalReportTokens.current.bodySize)
     TextSecondary(
       text = if (delta >= 0) "  +" + format(delta) else "  " + format(delta),
-      fontSize = 12.sp
+      fontSize = LocalReportTokens.current.captionSize
     )
   }
 }
@@ -331,11 +338,11 @@ private fun MomentsCard(report: AnnualReport) {
 @Composable
 private fun MomentRow(label: String, moment: SongMoment) {
   Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-    TextSecondary(text = label, fontSize = 12.sp)
+    TextSecondary(text = label, fontSize = LocalReportTokens.current.captionSize)
     Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-      TextPrimary(text = moment.title, fontSize = 15.sp)
+      TextPrimary(text = moment.title, fontSize = LocalReportTokens.current.bodySize)
       if (moment.artist.isNotBlank()) {
-        TextSecondary(text = moment.artist, fontSize = 12.sp)
+        TextSecondary(text = moment.artist, fontSize = LocalReportTokens.current.captionSize)
       }
     }
   }
@@ -345,7 +352,7 @@ private fun MomentRow(label: String, moment: SongMoment) {
 private fun MetricItem(label: String, value: String) {
   Column(horizontalAlignment = Alignment.CenterHorizontally) {
     TextPrimary(text = value, fontSize = 20.sp)
-    TextSecondary(text = label, fontSize = 12.sp)
+    TextSecondary(text = label, fontSize = LocalReportTokens.current.captionSize)
   }
 }
 
@@ -385,16 +392,16 @@ private fun RankRow(rank: Int, title: String, subtitle: String, listenMs: Long, 
       .padding(vertical = 6.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
-    TextPrimary(text = rank.toString(), fontSize = 16.sp, color = LocalTheme.current.secondary)
+    TextPrimary(text = rank.toString(), fontSize = LocalReportTokens.current.titleSize, color = LocalTheme.current.secondary)
     Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-      TextPrimary(text = title, fontSize = 15.sp)
+      TextPrimary(text = title, fontSize = LocalReportTokens.current.bodySize)
       if (subtitle.isNotBlank()) {
-        TextSecondary(text = subtitle, fontSize = 12.sp)
+        TextSecondary(text = subtitle, fontSize = LocalReportTokens.current.captionSize)
       }
     }
     Column(horizontalAlignment = Alignment.End) {
-      TextPrimary(text = formatTime(context, listenMs), fontSize = 13.sp)
-      TextSecondary(text = plays.toString() + " x", fontSize = 12.sp)
+      TextPrimary(text = formatTime(context, listenMs), fontSize = LocalReportTokens.current.bodySize)
+      TextSecondary(text = plays.toString() + " x", fontSize = LocalReportTokens.current.captionSize)
     }
   }
 }
@@ -550,7 +557,7 @@ private fun LateNightCard(report: AnnualReport) {
     }
     if (report.lateNightTopSongs.isNotEmpty()) {
       Spacer(Modifier.height(8.dp))
-      TextSecondary(text = stringResource(R.string.stat_late_night_top), fontSize = 12.sp)
+      TextSecondary(text = stringResource(R.string.stat_late_night_top), fontSize = LocalReportTokens.current.captionSize)
       report.lateNightTopSongs.take(3).forEachIndexed { index, item ->
         RankRow(index + 1, item.title, item.artist, item.listenedMs, item.plays)
       }
@@ -569,16 +576,16 @@ private fun LoopCard(report: AnnualReport) {
       ) {
         TextPrimary(
           text = (index + 1).toString(),
-          fontSize = 16.sp,
+          fontSize = LocalReportTokens.current.titleSize,
           color = LocalTheme.current.secondary
         )
         Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-          TextPrimary(text = item.title, fontSize = 15.sp)
+          TextPrimary(text = item.title, fontSize = LocalReportTokens.current.bodySize)
           if (item.artist.isNotBlank()) {
-            TextSecondary(text = item.artist, fontSize = 12.sp)
+            TextSecondary(text = item.artist, fontSize = LocalReportTokens.current.captionSize)
           }
         }
-        TextPrimary(text = item.loops.toString() + " x", fontSize = 13.sp)
+        TextPrimary(text = item.loops.toString() + " x", fontSize = LocalReportTokens.current.bodySize)
       }
     }
   }
@@ -594,10 +601,10 @@ private fun GenreCard(report: AnnualReport) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween
       ) {
-        TextPrimary(text = g.genre, fontSize = 14.sp)
+        TextPrimary(text = g.genre, fontSize = LocalReportTokens.current.bodySize)
         TextSecondary(
           text = g.plays.toString() + "  ·  " + formatTime(context, g.listenedMs),
-          fontSize = 12.sp
+          fontSize = LocalReportTokens.current.captionSize
         )
       }
     }
@@ -612,8 +619,8 @@ private fun SourceCard(report: AnnualReport) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween
       ) {
-        TextPrimary(text = sourceLabel(s.source), fontSize = 14.sp)
-        TextSecondary(text = s.plays.toString(), fontSize = 13.sp)
+        TextPrimary(text = sourceLabel(s.source), fontSize = LocalReportTokens.current.bodySize)
+        TextSecondary(text = s.plays.toString(), fontSize = LocalReportTokens.current.bodySize)
       }
     }
   }
@@ -645,7 +652,7 @@ private fun SectionButton(text: String, onClick: () -> Unit) {
   androidx.compose.material3.Text(
     text = text,
     color = LocalTheme.current.primary,
-    fontSize = 14.sp,
+    fontSize = LocalReportTokens.current.bodySize,
     modifier = Modifier
       .padding(vertical = 12.dp)
       .clickable { onClick() }
