@@ -1,0 +1,94 @@
+package remix.myplayer.repo
+
+import android.content.ContentUris
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.MediaStore
+import androidx.palette.graphics.Palette
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import remix.myplayer.data.db.room.dao.AlbumColorDao
+import remix.myplayer.data.db.room.entity.AlbumColor
+import remix.myplayer.util.ColorUtil
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * 专辑封面主色：audioId → albumId → 封面 → Palette 主色。
+ *
+ * 结果缓存进 album_colors，取色失败也写 fallback，避免每次都重新解码封面。
+ */
+@Singleton
+class AlbumColorRepository @Inject constructor(
+  @ApplicationContext private val context: Context,
+  private val dao: AlbumColorDao
+) {
+
+  /** 返回 albumId → ARGB。命中缓存直接返回，未命中才读封面取色。 */
+  suspend fun colorsForAudioIds(
+    audioIds: List<Long>,
+    fallbackArgb: Int,
+    limit: Int = 100
+  ): Map<Long, Int> = withContext(Dispatchers.IO) {
+    val albumIds = resolveAlbumIds(audioIds).distinct().take(limit)
+    if (albumIds.isEmpty()) return@withContext emptyMap()
+
+    val cached = dao.byIds(albumIds).associate { it.albumId to it.color }
+    val missing = albumIds.filterNot { cached.containsKey(it) }
+
+    val result = HashMap<Long, Int>(cached)
+    val fresh = ArrayList<AlbumColor>(missing.size)
+    missing.forEach { albumId ->
+      val color = extractColor(albumId) ?: fallbackArgb
+      fresh.add(AlbumColor(albumId, color, System.currentTimeMillis()))
+      result[albumId] = color
+    }
+    if (fresh.isNotEmpty()) dao.upsert(fresh)
+    result
+  }
+
+  private fun resolveAlbumIds(audioIds: List<Long>): List<Long> {
+    if (audioIds.isEmpty()) return emptyList()
+    val out = ArrayList<Long>(audioIds.size)
+    val projection = arrayOf(MediaStore.Audio.Media.ALBUM_ID)
+    audioIds.forEach { audioId ->
+      runCatching {
+        context.contentResolver.query(
+          MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+          projection,
+          "_id = ?",
+          arrayOf(audioId.toString()),
+          null
+        )?.use { cursor ->
+          if (cursor.moveToFirst()) out.add(cursor.getLong(0))
+        }
+      }
+    }
+    return out
+  }
+
+  private fun extractColor(albumId: Long): Int? = runCatching {
+    val uri: Uri = ContentUris.withAppendedId(
+      Uri.parse("content://media/external/audio/albumart/"),
+      albumId
+    )
+    val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+      ?: return@runCatching null
+
+    // 先读边界再按目标 160px 降采样，避免整张大图进内存
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    var sample = 1
+    while (bounds.outWidth / sample > 160) sample *= 2
+    val bitmap = BitmapFactory.decodeByteArray(
+      bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample }
+    ) ?: return@runCatching null
+
+    val palette = Palette.from(bitmap).generate()
+    bitmap.recycle()
+    // 复用项目已有的选色策略（ColorUtil.getColor(Palette, int)）
+    ColorUtil.getColor(palette, 0)
+  }.getOrNull()?.takeIf { it != 0 }
+}
