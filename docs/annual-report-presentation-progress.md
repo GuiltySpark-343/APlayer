@@ -25,7 +25,9 @@
 | T4.2 | ✅ | d81a0481 | 通过 | 编译产物确认：`AlbumColorRepository.class`、`AlbumColorDao_Impl.class` 均生成 | 复用 `ColorUtil.getColor(Palette, int)`，未自造选色逻辑 |
 | T7.1 | ✅ | 320ee0dc | — | 文档交付 | `docs/report-asset-spec.md`：画布/安全区/灰度/命名/体积/接入/验收清单 |
 | T7.3 | ✅ | 02e521f1 | — | 文档交付 | `tools/report_assets/generate.md`：**从零搭建**（本机无 ComfyUI/无 torch）+ 锁定出图参数 + 后处理 + 禁止事项 |
-| T7.2 | ⬜ 待做 | — | — | — | scrim 算法，其价值就是视觉验证，等设备 |
+| T7.2 | ✅ | 本次提交 | 通过 | **数值验证通过**：修正后的 scrim 反解公式在 19 档底图亮度下白字对比度恒为 **4.50:1（PASS）**；原插值公式 15/19 档不达标（已废弃并回写规格） | `Scrim.kt`：`alpha = 1 - 0.1833/mean`，`mean ≤ 0.1833` 时取 0.05；方差 > 0.15 再 +0.05。**端到端效果仍待有底图后实机确认** |
+| T1.4 | ⚠️ | 本次提交 | 通过 | **待截图** | 附录页字号全部收敛到 token；剩余字面值正好只有文档标注的例外（图表内部 8/9/10.sp、指标值 20.sp） |
+| T8.1 | ⚠️ | 本次提交 | 通过 | **待截图** | 附录页顶部加"查看全部数据"标识，与叙事流区分；`YearSelector`、16 个 section、`ActionRow` 全部保留 |
 | T7.4 | ⬜ 待做 | — | — | — | 染色接入，依赖 T7.2 与底图产出 |
 | T6.1 | ✅ | 42c0c9e3 | 通过 | **双重验证**：①Room 编译期校验 `@Query` 通过；②用 Room 导出的 schema 在本机 sqlite3 真跑该 SQL，结果与期望**逐项一致**（Q1 Pop2/Rock1、Q2 Pop3、Q3 Jazz1、Q4 Pop1），且 `song_added`、NULL 流派、空流派、跨年记录全部被正确排除（计入总数 8） | `genreByQuarter` + `GenreQuarterCount` + 仓库方法 + `AnnualReport.genreByQuarter`（带默认值） |
 | T6.2 | ✅ | 82da1434 | 通过 | **静态验证通过**：`12.json` 的 `createSql` 与迁移 SQL 逐字节一致，复合主键 `year,slot` 正确，仅新增 `report_overrides` | 实体 + DAO + `migration11to12` + `VERSION = 12` |
