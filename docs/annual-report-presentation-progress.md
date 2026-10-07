@@ -37,7 +37,13 @@
 | — | ✅ | 332395d4 | 通过 | — | 补充 `DatabaseModule` 的 `AlbumColorDao` / `ReportOverrideDao` 提供（Hilt 缺 provider 会编译失败，属 T4.3/T6.2 的必要收尾） |
 | T3.4 | ⚠️ | 本次提交 | 通过 | **待截图** | `TrendLineChart`：4 条网格线、Path + 渐变填充（alpha 0.18）、PathMeasure 生长、峰值点标注、X 轴 1/4/7/10 |
 | T3.5 | ⚠️ | 本次提交 | 通过 | **待截图** | `DonutChart`：弧段留 1° 缝隙、圆心写最大项占比、右侧图例；弧形按 progress 生长 |
-| T3.6 | ⚠️ | 本次提交 | 通过 | **待截图** | `DualBarCompare`（用 Compose 布局实现，**无坐标计算故无溢出风险**：左条右生长、右条左生长）+ `GenreBands`（分段色带按阶段播放量占比，段内按曲风用 alpha 区分）；`PaletteStrip` 已在 T4.3 落地 |
+| T3.7 | ⚠️ | 51cff35b | 通过 | **待截图** | 四个图表页接线（S5 时段 / S7 年历 / S9 探索重复 / S10 来源）；把 `sourceLabel` 抽成 `SourceLabels.kt` 供附录页与叙事页共用，避免两处文案走偏 |
+| T5.1 | ⚠️ | 本次提交 | 通过 | **待截图** | 翻页视差：`translationX = -offset * 40f`（`offset = (page - currentPage) + currentPageOffsetFraction`） |
+| T5.2 | ⚠️ | 本次提交 | 通过 | **待截图** | `Motion.kt` 提供 `FadeInStaggered(index)`（80ms 间隔 + 400ms 淡入），已在 S0/S1/S2/S11 四个多元素页面应用 |
+| T5.3 | ⚠️ | 本次提交 | 通过 | 逻辑可静态确认；**待截图** | 新增 `LocalReduceMotion`，`ReportStoryScreen` 读 `Settings.Global.ANIMATOR_DURATION_SCALE == 0f`；所有图表动画改走 `reportTween()`、`HeroNumber` 与视差也在关动画时直接到终态 |
+| T6.3 | ⚠️ | 054e0792 | 通过 | **待截图** | `PageGenreEvolution`：按季度聚合成 4 个 `GenreStage`，交给 `GenreBands`；新增 `chart_quarter` 文案 |
+| T6.4 | ⚠️ | 本次提交 | 通过 | **待截图** | `PageYearBest`（歌手/专辑/单曲三卡 + 换一个）；ViewModel 增加 `bestOverrides`、`swapBest(slot)`（在前 5 候选里循环）并落 `report_overrides`；`StoryPages` 顺序重排为 S0–S12 |
+| S6/S8 | ⚠️ | 本次提交 | 通过 | **待截图** | 补齐实施包 S 列表里未单列的两页：`PageNight`（0–6 点占比 + 深夜最常听 Top3）、`PageLoopKing`（循环次数大数字 + 曲名）。**至此 S0–S12 十三页全部有实现，流程内不再出现占位页** |
 
 ## 阻塞
 
