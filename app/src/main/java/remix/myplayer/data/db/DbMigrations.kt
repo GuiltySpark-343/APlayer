@@ -107,4 +107,12 @@ internal object DbMigrations {
       db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_play_events_eventId` ON `play_events` (`eventId`)")
     }
   }
+
+  val migration10to11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL(
+        "CREATE TABLE IF NOT EXISTS `album_colors` (`albumId` INTEGER NOT NULL, `color` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`albumId`))"
+      )
+    }
+  }
 }

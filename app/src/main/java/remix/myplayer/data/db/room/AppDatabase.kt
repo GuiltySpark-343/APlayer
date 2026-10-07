@@ -8,6 +8,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import remix.myplayer.data.db.DbMigrations.migration10to11
 import remix.myplayer.data.db.DbMigrations.migration3to4
 import remix.myplayer.data.db.DbMigrations.migration4to5
 import remix.myplayer.data.db.DbMigrations.migration5to6
@@ -15,6 +16,7 @@ import remix.myplayer.data.db.DbMigrations.migration6to7
 import remix.myplayer.data.db.DbMigrations.migration7to8
 import remix.myplayer.data.db.DbMigrations.migration8to9
 import remix.myplayer.data.db.DbMigrations.migration9to10
+import remix.myplayer.data.db.room.dao.AlbumColorDao
 import remix.myplayer.data.db.room.dao.HistoryDao
 import remix.myplayer.data.db.room.dao.MetaDataCacheDao
 import remix.myplayer.data.db.room.dao.PlayEventDao
@@ -22,6 +24,7 @@ import remix.myplayer.data.db.room.dao.PlayListDao
 import remix.myplayer.data.db.room.dao.PlayQueueDao
 import remix.myplayer.data.db.room.dao.SmbDao
 import remix.myplayer.data.db.room.dao.WebDavDao
+import remix.myplayer.data.db.room.entity.AlbumColor
 import remix.myplayer.data.db.room.entity.History
 import remix.myplayer.data.db.room.entity.MetaDataCache
 import remix.myplayer.data.db.room.entity.PlayEvent
@@ -45,7 +48,8 @@ import timber.log.Timber
     WebDav::class,
     Smb::class,
     MetaDataCache::class,
-    PlayEvent::class
+    PlayEvent::class,
+    AlbumColor::class
   ], version = AppDatabase.VERSION, exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -64,9 +68,11 @@ abstract class AppDatabase : RoomDatabase() {
 
   abstract fun metaDataCacheDao(): MetaDataCacheDao
 
+  abstract fun albumColorDao(): AlbumColorDao
+
   companion object {
 
-    const val VERSION = 10
+    const val VERSION = 11
 
     @Volatile
     private var INSTANCE: AppDatabase? = null
@@ -94,6 +100,7 @@ abstract class AppDatabase : RoomDatabase() {
           .addMigrations(migration7to8)
           .addMigrations(migration8to9)
           .addMigrations(migration9to10)
+          .addMigrations(migration10to11)
           .build()
       database.invalidationTracker.addObserver(object :
         InvalidationTracker.Observer(PlayList.TABLE_NAME, PlayQueue.TABLE_NAME) {
