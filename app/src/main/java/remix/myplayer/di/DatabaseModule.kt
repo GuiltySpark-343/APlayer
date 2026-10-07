@@ -8,10 +8,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import remix.myplayer.data.db.room.AppDatabase
 import remix.myplayer.data.db.room.dao.HistoryDao
+import remix.myplayer.data.db.room.dao.AlbumColorDao
 import remix.myplayer.data.db.room.dao.MetaDataCacheDao
 import remix.myplayer.data.db.room.dao.PlayEventDao
 import remix.myplayer.data.db.room.dao.PlayListDao
 import remix.myplayer.data.db.room.dao.PlayQueueDao
+import remix.myplayer.data.db.room.dao.ReportOverrideDao
 import remix.myplayer.data.db.room.dao.WebDavDao
 import javax.inject.Singleton
 
@@ -53,6 +55,16 @@ object DatabaseModule {
   @Provides
   fun provideMetaDataCacheDao(database: AppDatabase): MetaDataCacheDao {
     return database.metaDataCacheDao()
+  }
+
+  @Provides
+  fun provideAlbumColorDao(database: AppDatabase): AlbumColorDao {
+    return database.albumColorDao()
+  }
+
+  @Provides
+  fun provideReportOverrideDao(database: AppDatabase): ReportOverrideDao {
+    return database.reportOverrideDao()
   }
 
   @Provides

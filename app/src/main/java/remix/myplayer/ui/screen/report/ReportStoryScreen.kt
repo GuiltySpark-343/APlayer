@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import remix.myplayer.ui.component.report.StoryPager
 import remix.myplayer.ui.nav.LocalNavController
 import remix.myplayer.ui.theme.report.LocalReportTokens
-import remix.myplayer.ui.theme.report.ReportTokenDefaults
+import remix.myplayer.ui.theme.report.reportTokensFor
 import remix.myplayer.viewmodel.annualReportViewModel
 
 /**
@@ -41,10 +41,11 @@ fun ReportStoryScreen() {
   val story = ReportStory.analyze(report)
   val pages = StoryPages.visible(report)
   val nav = LocalNavController.current
+  val tokens = reportTokensFor(state.paletteColors)
 
-  CompositionLocalProvider(LocalReportTokens provides ReportTokenDefaults.Dark) {
+  CompositionLocalProvider(LocalReportTokens provides tokens) {
     StoryPager(pageCount = pages.size) { page ->
-      renderStoryPage(page, report, story, context, nav, viewModel)
+      renderStoryPage(page, report, story, context, nav, viewModel, state.paletteColors)
     }
   }
 }

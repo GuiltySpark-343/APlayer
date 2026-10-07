@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import remix.myplayer.data.model.report.AnnualReport
+import remix.myplayer.ui.screen.report.pages.PageColors
 import remix.myplayer.ui.screen.report.pages.PageCover
 import remix.myplayer.ui.screen.report.pages.PageKeywords
 import remix.myplayer.ui.screen.report.pages.PageOverview
@@ -24,6 +25,7 @@ object StoryPages {
   val entries: List<Entry> = listOf(
     Entry("cover", { true }),
     Entry("overview", { it.plays > 0 }),
+    Entry("colors", { it.topSongs.isNotEmpty() }),
     Entry("highlights", { it.topSongs.isNotEmpty() || it.loopTop.isNotEmpty() }),
     Entry("peak_hour", { it.hourDistribution.isNotEmpty() }),
     Entry("night", { lateNightRatio(it) >= 0.02 }),
@@ -53,12 +55,14 @@ fun renderStoryPage(
   story: ReportStoryResult,
   context: Context,
   nav: NavController,
-  viewModel: AnnualReportViewModel
+  viewModel: AnnualReportViewModel,
+  paletteColors: List<Int>
 ) {
   val id = StoryPages.visible(report).getOrNull(index)?.id
   when (id) {
     "cover" -> PageCover(report, story)
     "overview" -> PageOverview(report, context)
+    "colors" -> PageColors(paletteColors)
     "keywords" -> PageKeywords(report, story, context)
     "share" -> PageShare(viewModel, nav)
     else -> PagePlaceholder(id ?: "")

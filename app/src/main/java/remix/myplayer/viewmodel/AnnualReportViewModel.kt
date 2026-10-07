@@ -20,8 +20,12 @@ import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.data.model.report.PlayEventExport
 import remix.myplayer.R
 import remix.myplayer.data.model.report.TrackExport
+import androidx.compose.ui.graphics.toArgb
+import remix.myplayer.repo.AlbumColorRepository
 import remix.myplayer.repo.PlayEventRepository
 import remix.myplayer.repo.PlayListRepository
+import remix.myplayer.ui.theme.report.ReportTokenDefaults
+import remix.myplayer.ui.theme.report.reportTokensFor
 import remix.myplayer.ui.nav.MessageNotifier
 import remix.myplayer.ui.screen.report.ReportPoster
 import remix.myplayer.ui.screen.report.ReportStory
@@ -38,6 +42,7 @@ import javax.inject.Inject
 class AnnualReportViewModel @Inject constructor(
   private val playEventRepository: PlayEventRepository,
   private val playListRepository: PlayListRepository,
+  private val albumColorRepository: AlbumColorRepository,
   @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -48,14 +53,29 @@ class AnnualReportViewModel @Inject constructor(
     viewModelScope.launch {
       val years = playEventRepository.availableYears()
       val year = _state.value.year.takeIf { it in years } ?: (years.firstOrNull() ?: currentYear())
+      val report = playEventRepository.annualReport(year)
       _state.value = ReportUiState(
         years = years,
         year = year,
-        report = playEventRepository.annualReport(year),
+        report = report,
         previousReport = previousReportOf(years, year),
+        paletteColors = paletteColorsOf(report),
         loading = false
       )
     }
+  }
+
+  /**
+   * S2 音乐颜色：按 Top 歌曲顺序取专辑封面主色（去重）。
+   * 取不到封面时由仓库回填默认主色，保证页面不会空掉。
+   */
+  private suspend fun paletteColorsOf(report: AnnualReport): List<Int> {
+    val audioIds = report.topSongs.mapNotNull { it.audioId }
+    if (audioIds.isEmpty()) return emptyList()
+    return albumColorRepository.colorsInOrder(
+      audioIds = audioIds,
+      fallbackArgb = ReportTokenDefaults.Dark.accent.toArgb()
+    ).distinct()
   }
 
   fun selectYear(year: Int) {
@@ -63,9 +83,11 @@ class AnnualReportViewModel @Inject constructor(
     _state.value = _state.value.copy(year = year, loading = true)
     viewModelScope.launch {
       val years = _state.value.years
+      val report = playEventRepository.annualReport(year)
       _state.value = _state.value.copy(
-        report = playEventRepository.annualReport(year),
+        report = report,
         previousReport = previousReportOf(years, year),
+        paletteColors = paletteColorsOf(report),
         loading = false
       )
     }
@@ -112,7 +134,12 @@ class AnnualReportViewModel @Inject constructor(
         return@launch
       }
       val bitmap = withContext(Dispatchers.IO) {
-        ReportPoster.render(context, report, ReportStory.analyze(report))
+        ReportPoster.render(
+          context,
+          report,
+          ReportStory.analyze(report),
+          reportTokensFor(_state.value.paletteColors)
+        )
       }
       _state.value = _state.value.copy(posterBitmap = bitmap)
     }
@@ -332,6 +359,8 @@ data class ReportUiState(
   val year: Int? = null,
   val report: AnnualReport? = null,
   val previousReport: AnnualReport? = null,
+  /** S2 音乐颜色：按 Top 歌曲顺序的专辑封面主色（去重）。 */
+  val paletteColors: List<Int> = emptyList(),
   val posterBitmap: Bitmap? = null,
   val sharePosterIntent: Intent? = null,
   val loading: Boolean = true,

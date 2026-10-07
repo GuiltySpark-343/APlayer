@@ -85,3 +85,12 @@ object ReportTokenDefaults {
 }
 
 val LocalReportTokens = staticCompositionLocalOf { ReportTokenDefaults.Dark }
+
+/**
+ * 由专辑主色派生报告令牌；没有主色时退回默认。
+ *
+ * 页面与海报必须共用这一个入口，否则两边配色会走偏。
+ */
+fun reportTokensFor(paletteColors: List<Int>): ReportTokens =
+  paletteColors.firstOrNull()?.let { ReportTokenDefaults.fromAccent(it) }
+    ?: ReportTokenDefaults.Dark

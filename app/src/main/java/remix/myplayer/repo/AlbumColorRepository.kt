@@ -32,42 +32,58 @@ class AlbumColorRepository @Inject constructor(
     fallbackArgb: Int,
     limit: Int = 100
   ): Map<Long, Int> = withContext(Dispatchers.IO) {
-    val albumIds = resolveAlbumIds(audioIds).distinct().take(limit)
-    if (albumIds.isEmpty()) return@withContext emptyMap()
+    val pairs = audioIds.mapNotNull { audioId -> resolveAlbumId(audioId)?.let { audioId to it } }
+      .take(limit)
+    if (pairs.isEmpty()) return@withContext emptyMap()
 
-    val cached = dao.byIds(albumIds).associate { it.albumId to it.color }
-    val missing = albumIds.filterNot { cached.containsKey(it) }
+    val albumIds = pairs.map { it.second }.distinct()
+    val colors = ensureColors(albumIds, fallbackArgb)
 
-    val result = HashMap<Long, Int>(cached)
+    val result = HashMap<Long, Int>(colors)
+    pairs.forEach { (_, albumId) -> colors[albumId]?.let { result[albumId] = it } }
+    result
+  }
+
+  /**
+   * 与入参**一一对应**的颜色（解析不出封面的项被跳过），用于 S2 色板按听歌顺序展示。
+   */
+  suspend fun colorsInOrder(
+    audioIds: List<Long>,
+    fallbackArgb: Int,
+    limit: Int = 100
+  ): List<Int> = withContext(Dispatchers.IO) {
+    val albumIds = audioIds.mapNotNull { resolveAlbumId(it) }.take(limit)
+    if (albumIds.isEmpty()) return@withContext emptyList()
+
+    val colors = ensureColors(albumIds.distinct(), fallbackArgb)
+    albumIds.mapNotNull { colors[it] }
+  }
+
+  /** 取色（含缓存与回填），返回 albumId → ARGB 的可变表。 */
+  private suspend fun ensureColors(albumIds: List<Long>, fallbackArgb: Int): MutableMap<Long, Int> {
+    val colors = dao.byIds(albumIds).associate { it.albumId to it.color }.toMutableMap()
+    val missing = albumIds.filterNot { colors.containsKey(it) }
     val fresh = ArrayList<AlbumColor>(missing.size)
     missing.forEach { albumId ->
       val color = extractColor(albumId) ?: fallbackArgb
       fresh.add(AlbumColor(albumId, color, System.currentTimeMillis()))
-      result[albumId] = color
+      colors[albumId] = color
     }
     if (fresh.isNotEmpty()) dao.upsert(fresh)
-    result
+    return colors
   }
 
-  private fun resolveAlbumIds(audioIds: List<Long>): List<Long> {
-    if (audioIds.isEmpty()) return emptyList()
-    val out = ArrayList<Long>(audioIds.size)
-    val projection = arrayOf(MediaStore.Audio.Media.ALBUM_ID)
-    audioIds.forEach { audioId ->
-      runCatching {
-        context.contentResolver.query(
-          MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-          projection,
-          "_id = ?",
-          arrayOf(audioId.toString()),
-          null
-        )?.use { cursor ->
-          if (cursor.moveToFirst()) out.add(cursor.getLong(0))
-        }
-      }
+  private fun resolveAlbumId(audioId: Long): Long? = runCatching {
+    context.contentResolver.query(
+      MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+      arrayOf(MediaStore.Audio.Media.ALBUM_ID),
+      "_id = ?",
+      arrayOf(audioId.toString()),
+      null
+    )?.use { cursor ->
+      if (cursor.moveToFirst()) cursor.getLong(0) else null
     }
-    return out
-  }
+  }.getOrNull()
 
   private fun extractColor(albumId: Long): Int? = runCatching {
     val uri: Uri = ContentUris.withAppendedId(
