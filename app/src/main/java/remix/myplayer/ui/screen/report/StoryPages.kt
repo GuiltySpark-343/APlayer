@@ -4,12 +4,16 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import remix.myplayer.data.model.report.AnnualReport
+import remix.myplayer.ui.screen.report.pages.PageCalendar
 import remix.myplayer.ui.screen.report.pages.PageColors
 import remix.myplayer.ui.screen.report.pages.PageCover
 import remix.myplayer.ui.screen.report.pages.PageKeywords
 import remix.myplayer.ui.screen.report.pages.PageOverview
+import remix.myplayer.ui.screen.report.pages.PagePeakHour
 import remix.myplayer.ui.screen.report.pages.PagePlaceholder
+import remix.myplayer.ui.screen.report.pages.PageRepeatExplore
 import remix.myplayer.ui.screen.report.pages.PageShare
+import remix.myplayer.ui.screen.report.pages.PageSources
 import remix.myplayer.viewmodel.AnnualReportViewModel
 
 /**
@@ -63,6 +67,10 @@ fun renderStoryPage(
     "cover" -> PageCover(report, story)
     "overview" -> PageOverview(report, context)
     "colors" -> PageColors(paletteColors)
+    "peak_hour" -> PagePeakHour(report)
+    "calendar" -> PageCalendar(report)
+    "repeat_explore" -> PageRepeatExplore(story)
+    "sources" -> PageSources(report)
     "keywords" -> PageKeywords(report, story, context)
     "share" -> PageShare(viewModel, nav)
     else -> PagePlaceholder(id ?: "")

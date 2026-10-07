@@ -620,17 +620,6 @@ private fun SourceCard(report: AnnualReport) {
 }
 
 @Composable
-private fun sourceLabel(source: String): String = when (source) {
-  "SEARCH_CLICK" -> stringResource(R.string.source_search)
-  "LIBRARY_CLICK" -> stringResource(R.string.source_library)
-  "PLAYLIST_CLICK" -> stringResource(R.string.source_playlist)
-  "QUEUE_AUTO" -> stringResource(R.string.source_queue_auto)
-  "RESUME" -> stringResource(R.string.source_resume)
-  "EXTERNAL_INTENT" -> stringResource(R.string.source_external)
-  else -> source
-}
-
-@Composable
 private fun ActionRow(
   onGeneratePlaylist: () -> Unit,
   onShareCard: () -> Unit,
