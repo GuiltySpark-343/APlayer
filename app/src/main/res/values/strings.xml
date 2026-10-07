@@ -675,4 +675,6 @@
   <string name="story_genre_evolution">Genre evolution</string>
   <string name="story_color">Music colors</string>
   <string name="story_color_caption">Your year, in the colors of the albums you played most</string>
+  <string name="poster_hours_suffix">h</string>
+  <string name="story_overview_caption">%1$d plays · %2$d songs · %3$d days</string>
 </resources>
