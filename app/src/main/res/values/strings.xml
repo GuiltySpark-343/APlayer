@@ -668,4 +668,11 @@
   <string name="kw_default">Music Traveler</string>
   <string name="poster_hours">%1$.1f h</string>
   <string name="poster_minutes">%1$d min</string>
+  <string name="story_start_hint">Swipe to begin</string>
+  <string name="story_all_data">View all data</string>
+  <string name="story_year_best">Best of the year</string>
+  <string name="story_swap">Swap</string>
+  <string name="story_genre_evolution">Genre evolution</string>
+  <string name="story_color">Music colors</string>
+  <string name="story_color_caption">Your year, in the colors of the albums you played most</string>
 </resources>

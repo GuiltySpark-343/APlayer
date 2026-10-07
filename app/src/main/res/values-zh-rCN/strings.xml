@@ -650,4 +650,11 @@
   <string name="kw_default">音乐旅人</string>
   <string name="poster_hours">%1$.1f 小时</string>
   <string name="poster_minutes">%1$d 分钟</string>
+  <string name="story_start_hint">滑动开始回顾</string>
+  <string name="story_all_data">查看全部数据</string>
+  <string name="story_year_best">年度之最</string>
+  <string name="story_swap">换一个</string>
+  <string name="story_genre_evolution">曲风进化史</string>
+  <string name="story_color">音乐颜色</string>
+  <string name="story_color_caption">你这一年，藏在你听得最多的专辑封面颜色里</string>
 </resources>
