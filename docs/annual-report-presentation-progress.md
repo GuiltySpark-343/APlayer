@@ -4,26 +4,49 @@
 实施包：`docs/annual-report-presentation-implementation.md`
 设计文档：`docs/annual-report-presentation-design.md`
 
+图例：✅ 完成且验证 ｜ ⚠️ 代码完成、**截图待补** ｜ ⬜ 未开始
+
 | Task | 状态 | 提交 | 构建 | 截图/验证 | 备注 |
 | --- | --- | --- | --- | --- | --- |
-| T0.1 | ✅ | 8158f594 | 通过 | `docs/screenshots/t0.1-report-open.png`（冷启动与热启动两条路径都到达报告页）、`t0.1-before-warm.png`（证明热启动前不在该页） | 计划原方案不可行：`NavDeepLink` 构造函数为 internal，且 Activity 拿不到 composition 内的 NavController；改为 `PendingRoute` 通道，并补 `onNewIntent`（否则热启动不生效） |
-| T0.2 | ✅ | a0ccbd7e | — | `tools/shots.ps1` 实际产出截图 | PowerShell 的 `>` 重定向按文本处理会损坏 PNG，改为 `screencap` 落盘后 `adb pull`；注意本机 shell 是 Windows PowerShell 5.1，**没有 `pwsh` 命令**，直接 `& <path>\shots.ps1` 调用 |
+| T0.1 | ✅ | 8158f594 | 通过 | `docs/screenshots/t0.1-report-open.png`（冷启动+热启动两路径）、`t0.1-before-warm.png` | 计划原方案不可行（见"执行修正"1），改 `PendingRoute` 通道 + `onNewIntent` |
+| T0.2 | ✅ | a0ccbd7e | — | `tools/shots.ps1` 实产出图 | `screencap` 落盘再 `pull`；本机无 `pwsh`，用 `& <path>` 调用 |
 | T0.3 | ✅ | f4a13ac3 | — | 本文件 | 台账建立 |
-| T1.1 | ✅ | 448d92be | 通过 | — | 新增 `ui/theme/report/ReportTokens.kt`（`ReportTokens` + `ReportTokenDefaults` + `LocalReportTokens`），默认值等于海报原配色 |
-| T1.2 | ✅ | 4ec9b944 | 通过 | 待截图（设备断开，延后与 T1.3 一起补） | 海报改为消费 tokens；因文件已 import `android.graphics.Color`，Compose 的 `Color` 用别名 `ComposeColor` 导入，`paint()` 改为吃 `Color` |
-| T1.3 | ✅ | 76d9fad8 | 通过 | 待截图 | `StoryCard` 真卡片；`AnnualReportScreen` 拆为 `AnnualReportScreen()`（提供 tokens）+ `AnnualReportContent()`，避免整块 Scaffold 重新缩进 |
-| T1.4 | ⬜ 待做 | — | — | — | 字号收敛到 token；等设备回来与截图一起做，便于对比视觉差异 |
-| T2.1 | ✅ | 本次提交 | 通过 | 待接线后截图 | `StoryPage` / `StoryPager`（背景只在 Pager 画） |
-| T2.2 | ✅ | 本次提交 | 通过 | 待接线后截图 | `HeroNumber`（Animatable 800ms）/ `Caption` |
-| T2.3 | ✅ | 本次提交 | 通过 | 构建即验证 | 7 个字符串 key 已加（en + zh-rCN），加前已查重 |
-| T2.4 | ✅ | 本次提交 | 通过 | 待截图 | `PageCover`（S0）/ `PageOverview`（S1）+ `poster_hours_suffix`、`story_overview_caption` 两个字符串。**执行中修掉计划里的一个编译错误**：`joinToString` 的 lambda 不是 inline，不能调 `stringResource`，改为先 `forEach` 解析 |
-| T2.5 | ✅ | 本次提交 | 通过 | 待截图 | `StoryPages`（页面注册表 + `visible()`）、`renderStoryPage`、`PagePlaceholder`、`ReportStoryScreen`、路由 `annual_report_story` + deep link + manifest host + 设置入口改指向叙事页。`keywords`/`share` 暂走占位页，由 T2.6 替换 |
+| T1.1 | ✅ | 448d92be | 通过 | — | `ReportTokens` / `ReportTokenDefaults` / `LocalReportTokens` |
+| T1.2 | ⚠️ | 4ec9b944 | 通过 | **待截图** | 海报改为消费 tokens；`android.graphics.Color` 冲突用别名 `ComposeColor` |
+| T1.3 | ⚠️ | 76d9fad8 | 通过 | **待截图** | `StoryCard` 真卡片；`AnnualReportScreen` 拆为外壳（提供 tokens）+ 内容，避免整块重新缩进 |
+| T1.4 | ⬜ 待做 | — | — | — | 字号收敛到 token；与截图批次一起做便于对比 |
+| T2.1 | ⚠️ | c54d7ff2 | 通过 | **待截图** | `StoryPage` / `StoryPager`（背景只在 Pager 画） |
+| T2.2 | ⚠️ | 1b3f5d18 | 通过 | **待截图** | `HeroNumber`（Animatable 800ms）/ `Caption` |
+| T2.3 | ✅ | 350d534b | 通过 | 构建即验证 | 7 个字符串 key（en + zh-rCN） |
+| T2.4 | ⚠️ | abc41df7 | 通过 | **待截图** | S0/S1 两页 + 2 个字符串。修掉计划里的编译错误（见"执行修正"2） |
+| T2.5 | ⚠️ | fdaa1d3e | 通过 | **待截图** | `StoryPages` + `renderStoryPage` + `PagePlaceholder` + `ReportStoryScreen` + 路由/deep link/manifest/设置入口 |
+| T2.6 | ⚠️ | 331ea648 | 通过 | **待截图** | S11 关键词页（复用 `story_template` 拼句）、S12 分享页 + `story_poster_loading`；P3-2 收尾 |
+| T4.1 | ✅ | f25022b4 | 通过 | **静态验证通过**：Room 导出的 `11.json` 中 `album_colors` 的 `createSql` 与迁移 SQL **逐字节一致**，且只新增该表、其它表无漂移 | 不需设备即可确认迁移正确性；运行时升级路径仍待真机验证 |
+| T4.2 | ✅ | d81a0481 | 通过 | 编译产物确认：`AlbumColorRepository.class`、`AlbumColorDao_Impl.class` 均生成 | 复用 `ColorUtil.getColor(Palette, int)`，未自造选色逻辑 |
+| T7.1 | ✅ | 320ee0dc | — | 文档交付 | `docs/report-asset-spec.md`：画布/安全区/灰度/命名/体积/接入/验收清单 |
+| T7.3 | ✅ | 02e521f1 | — | 文档交付 | `tools/report_assets/generate.md`：**从零搭建**（本机无 ComfyUI/无 torch）+ 锁定出图参数 + 后处理 + 禁止事项 |
+| T7.2 | ⬜ 待做 | — | — | — | scrim 算法，其价值就是视觉验证，等设备 |
+| T7.4 | ⬜ 待做 | — | — | — | 染色接入，依赖 T7.2 与底图产出 |
+| T6.1 | ✅ | 42c0c9e3 | 通过 | **双重验证**：①Room 编译期校验 `@Query` 通过；②用 Room 导出的 schema 在本机 sqlite3 真跑该 SQL，结果与期望**逐项一致**（Q1 Pop2/Rock1、Q2 Pop3、Q3 Jazz1、Q4 Pop1），且 `song_added`、NULL 流派、空流派、跨年记录全部被正确排除（计入总数 8） | `genreByQuarter` + `GenreQuarterCount` + 仓库方法 + `AnnualReport.genreByQuarter`（带默认值） |
+| T6.2 | ✅ | 82da1434 | 通过 | **静态验证通过**：`12.json` 的 `createSql` 与迁移 SQL 逐字节一致，复合主键 `year,slot` 正确，仅新增 `report_overrides` | 实体 + DAO + `migration11to12` + `VERSION = 12` |
+| T3.1 | ⚠️ | 88c17a4e | 通过 | **待截图** | `ChartFrame`：标题 + 固定高度画布 + 可选图例；横向内边距交给 StoryPage，避免双重留白 |
+| T3.2 | ⚠️ | ff8238ba | 通过 | **待截图**；几何已自检（0 点起始角 `-90°`、每小时 15°、缝隙 13.5°） | `PolarClockChart`：半径随播放量生长，圆心标峰值小时，0/6/12/18 刻度 |
+| T3.3 | ⚠️ | b60121b4 | 通过 | **待截图**；尺寸已数值自检：1080px 屏（density 2.75）下可用宽 970px、月标签 77px、gap 5.5px → `cell ≈ 23.5px`、`gridHeight ≈ 342px`（画布高 522px，**放得下**） | `CalendarHeatmap`：cell 由可用宽度反推（**不写死**，海报踩过此坑）、5 档色阶、逐月生长、月份标签 + legend；新增 `chart_legend_less/more` |
 
 ## 阻塞
 
-- **USB 设备断开**（Windows 只枚举到通用 USB 复合设备，无 ADB 接口），`adb devices` 为空。
-  受影响：T1.2 / T1.3 的截图核对，以及后续所有需要真机截图的任务。
-  恢复方式：重新插好数据线并确认手机已授权 USB 调试；恢复后先跑 `adb devices` 确认，再补截图。
+- **USB 设备断开**（`adb devices` 为空；Windows 只枚举到通用 USB 复合设备，无 ADB 接口）。
+  受影响：所有 ⚠️ 标记的截图核对、T1.4、T7.2、以及 T4.1 的真机升级路径验证。
+  恢复方式：重插数据线并确认已授权 USB 调试；`adb devices` 能看到设备后，先跑一轮截图批次。
+
+## 截图批次计划（设备恢复后按此顺序执行）
+
+1. `adb install -r app/build/outputs/apk/normal/debug/APlayer-v2.1.1.0-normal-debug.apk`
+2. T1.3/T1.4 附录页：`& tools\shots.ps1 -Name t1.3-cards -Uri "aplayer://annual_report"`
+3. T2.4/T2.5 叙事流：`-Uri "aplayer://annual_report_story"`，逐页滑动截图（S0/S1/S11/S12 至少各一张）
+4. T1.2 海报：附录页点「分享卡片」→ 截图对比 `docs/samples/poster-preview.png`
+5. 极端数据复核：超长歌名、5 位数播放次数、`1234.5 小时`、超长歌手名
+6. 每张图人工看过再回填本台账
 
 ## 设备与环境
 
@@ -31,11 +54,17 @@
 - adb：`D:/Application2/Android/Sdk/platform-tools/adb.exe`
 - 构建：`$env:JAVA_HOME="D:\Application2\jdk-17.0.3.1"; $env:ANDROID_HOME="D:\Application2\Android\Sdk"; .\gradlew.bat :app:assembleNormalDebug`
 - 产物：`app/build/outputs/apk/normal/debug/APlayer-v2.1.1.0-normal-debug.apk`
-- 出图验证用 GPU：NVIDIA RTX 4060 Ti 16GB（P3-7 资产管线可用 Flux.1-dev fp8）
+- 出图 GPU：NVIDIA RTX 4060 Ti 16GB，驱动 610.88；**ComfyUI 未安装**，python 3.11.5（anaconda），无 torch
+
+## 执行修正（计划文档已同步回写）
+
+1. **T0.1 deep link 方案不可行**：`NavDeepLink(uri)` 构造函数在该 navigation 版本是 `internal`；`LocalNavController` 在 composition 内创建，Activity 拿不到；且热启动不触发 `onResume`。改为 `PendingRoute` 状态通道 + `onNewIntent`。
+2. **T2.4 示例代码编译不过**：`joinToString { stringResource(...) }`——`joinToString` 的 transform 不是 inline lambda，不能调 `@Composable`。改为先 `forEach`（inline）解析字符串。
 
 ## 注意事项（执行中积累）
 
-1. **设备锁屏会导致 `adb install` 卡住**（vivo 需要亮屏解锁才给装）。用例：`adb shell input keyevent KEYCODE_WAKEUP` + `adb shell input swipe 540 2000 540 700 200` 解锁后再装。
-2. **本机没有 `pwsh` 命令**（shell 是 Windows PowerShell 5.1），脚本用 `& <path>` 调用。
-3. **报告页数据已就绪**：2026 年真实数据存在（1531 次播放 / 90.6 小时 / 465 首歌 / 210 歌手 / 257 专辑 / 流派 Blues 347 次），截图验证有真实内容可看。
-4. **`AnnualReportScreen.kt` 的 `SectionCard` 已删除**，全部改为 `StoryCard`；注意该文件里 `Column`/`fillMaxWidth` 等 import 可能已不再使用（不影响构建，但后续清理时留意）。
+1. **设备锁屏会导致 `adb install` 卡住**（vivo 需亮屏解锁）：先 `adb shell input keyevent KEYCODE_WAKEUP`，必要时 `adb shell input swipe 540 2000 540 700 200`。
+2. **本机没有 `pwsh` 命令**（shell 是 Windows PowerShell 5.1）：脚本用 `& <path>\xxx.ps1` 调用。
+3. **不要用 `Select-Object -First N` 接 gradle 的输出**：会提前掐断管道把 gradle 杀掉，表现为莫名其妙的 exit 1。改为先 `$out = ... 2>&1` 再过滤。
+4. **报告页数据已就绪**：2026 年真实数据（1531 次播放 / 90.6 小时 / 465 首歌 / 210 歌手 / 257 专辑 / Blues 347 次），截图有真实内容可看。
+5. `/app/schemas` 虽被 gitignore，但**是验证 Room 迁移的最好工具**：`app/schemas/remix.myplayer.data.db.room.AppDatabase/<version>.json` 里的 `createSql` 就是 Room 期望的建表语句。
