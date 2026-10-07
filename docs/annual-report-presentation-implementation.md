@@ -1763,6 +1763,15 @@ P3-8 (T8.1)                    附录页整理
 | 2 | T2.4 | `story.keywords.joinToString { stringResource(...) }` —— `joinToString` 的 transform **不是 inline lambda**，编译报 `@Composable invocations can only happen from the context of a @Composable function` | 先 `forEach`（inline）解析 `stringResource` 成字符串列表，再 `joinToString` |
 | 3 | 执行环境 | 本机 shell 是 Windows PowerShell 5.1，**没有 `pwsh` 命令**；截图脚本要用 `& <path>\shots.ps1` 调用 | 已记入台账"注意事项" |
 
+### 自检 6 — 数值验证发现的方案缺陷（已修正并回写）
+
+| # | 位置 | 缺陷 | 修正 |
+| --- | --- | --- | --- |
+| 1 | T7.2 scrim 公式 | 原式 `alpha = lerp(0.05, 0.45, mean)` **压不住亮底图**：数值验证 19 档亮度里 **15 档白字对比度低于 4.5:1**（亮度 0.55 时只有 2.33:1） | 改为**反解**：白字 4.5:1 要求底亮度 ≤ 0.1833，故 `alpha = 1 - 0.1833/mean`；复验 19 档全部 **4.50:1 PASS** |
+| 2 | `docs/report-asset-spec.md` §4 | 原规格把"中位明度 ∈ [0.25, 0.55]"当作**全图**要求，而这个区间正好是白字读不清的区间——规格与 scrim 能力互相矛盾 | 改为**分区要求**：文字安全区平均亮度 ≤ 0.20（scrim 只需 0.05，底图可见），主体区才用 0.25–0.55 保层次 |
+
+> 教训：像 scrim 这种"兜底保障"的公式，必须用数值把边界情况算一遍，不能凭直觉插值。
+
 ### 自检 4 — 待执行中回填
 
 - T3.x 各图表的截图结论
