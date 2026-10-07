@@ -21,6 +21,8 @@ import remix.myplayer.data.model.report.PlayEventExport
 import remix.myplayer.R
 import remix.myplayer.data.model.report.TrackExport
 import androidx.compose.ui.graphics.toArgb
+import remix.myplayer.data.db.room.dao.ReportOverrideDao
+import remix.myplayer.data.db.room.entity.ReportOverride
 import remix.myplayer.repo.AlbumColorRepository
 import remix.myplayer.repo.PlayEventRepository
 import remix.myplayer.repo.PlayListRepository
@@ -43,8 +45,17 @@ class AnnualReportViewModel @Inject constructor(
   private val playEventRepository: PlayEventRepository,
   private val playListRepository: PlayListRepository,
   private val albumColorRepository: AlbumColorRepository,
+  private val reportOverrideDao: ReportOverrideDao,
   @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
+
+  /** 年度之最的一个候选项。 */
+  private data class BestCandidate(
+    val key: String,
+    val audioId: Long?,
+    val title: String,
+    val artist: String
+  )
 
   private val _state = MutableStateFlow(ReportUiState())
   val state = _state.asStateFlow()
@@ -60,6 +71,7 @@ class AnnualReportViewModel @Inject constructor(
         report = report,
         previousReport = previousReportOf(years, year),
         paletteColors = paletteColorsOf(report),
+        bestOverrides = bestOverridesOf(year),
         loading = false
       )
     }
@@ -88,9 +100,63 @@ class AnnualReportViewModel @Inject constructor(
         report = report,
         previousReport = previousReportOf(years, year),
         paletteColors = paletteColorsOf(report),
+        bestOverrides = bestOverridesOf(year),
         loading = false
       )
     }
+  }
+
+  /** S4 年度之最：读取用户这一年的覆盖选择。 */
+  private suspend fun bestOverridesOf(year: Int): Map<String, String> =
+    reportOverrideDao.byYear(year).associate { it.slot to it.canonicalId }
+
+  /**
+   * S4 年度之最：把某个槽位换成候选列表里的下一项，并落库。
+   * 候选顺序固定（按播放量降序取前 5），因此"换一个"是可预期的循环。
+   */
+  fun swapBest(slot: String) {
+    viewModelScope.launch {
+      val year = _state.value.year ?: return@launch
+      val report = _state.value.report ?: return@launch
+      val candidates = bestCandidates(report, slot)
+      if (candidates.isEmpty()) return@launch
+
+      val currentKey = _state.value.bestOverrides[slot]
+      val currentIndex = candidates.indexOfFirst { it.key == currentKey }.coerceAtLeast(0)
+      val next = candidates[(currentIndex + 1) % candidates.size]
+
+      reportOverrideDao.upsert(
+        ReportOverride(
+          year = year,
+          slot = slot,
+          canonicalId = next.key,
+          audioId = next.audioId,
+          title = next.title,
+          artist = next.artist,
+          updatedAt = System.currentTimeMillis()
+        )
+      )
+      _state.value = _state.value.copy(
+        bestOverrides = _state.value.bestOverrides + (slot to next.key)
+      )
+    }
+  }
+
+  /** 某个槽位的候选（最多 5 个）。专辑/歌手没有 canonicalId，用名字作为 key。 */
+  private fun bestCandidates(report: AnnualReport, slot: String): List<BestCandidate> = when (slot) {
+    "song" -> report.topSongs.take(5).map {
+      BestCandidate(it.canonicalId, it.audioId, it.title, it.artist)
+    }
+
+    "album" -> report.topAlbums.take(5).map {
+      BestCandidate(it.name, null, it.name, "")
+    }
+
+    "artist" -> report.topArtists.take(5).map {
+      BestCandidate(it.name, null, it.name, "")
+    }
+
+    else -> emptyList()
   }
 
   /** P1：取比该年小的最近一年报告，用于“多年对比”。 */
@@ -361,6 +427,8 @@ data class ReportUiState(
   val previousReport: AnnualReport? = null,
   /** S2 音乐颜色：按 Top 歌曲顺序的专辑封面主色（去重）。 */
   val paletteColors: List<Int> = emptyList(),
+  /** 年度之最的用户覆盖选择：slot → 选项 key。 */
+  val bestOverrides: Map<String, String> = emptyMap(),
   val posterBitmap: Bitmap? = null,
   val sharePosterIntent: Intent? = null,
   val loading: Boolean = true,

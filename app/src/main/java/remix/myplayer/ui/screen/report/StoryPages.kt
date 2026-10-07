@@ -15,6 +15,7 @@ import remix.myplayer.ui.screen.report.pages.PagePlaceholder
 import remix.myplayer.ui.screen.report.pages.PageRepeatExplore
 import remix.myplayer.ui.screen.report.pages.PageShare
 import remix.myplayer.ui.screen.report.pages.PageSources
+import remix.myplayer.ui.screen.report.pages.PageYearBest
 import remix.myplayer.viewmodel.AnnualReportViewModel
 
 /**
@@ -31,13 +32,16 @@ object StoryPages {
     Entry("cover", { true }),
     Entry("overview", { it.plays > 0 }),
     Entry("colors", { it.topSongs.isNotEmpty() }),
-    Entry("highlights", { it.topSongs.isNotEmpty() || it.loopTop.isNotEmpty() }),
+    Entry("genre_evolution", { it.genreByQuarter.isNotEmpty() }),
+    Entry(
+      "year_best",
+      { it.topSongs.isNotEmpty() || it.topAlbums.isNotEmpty() || it.topArtists.isNotEmpty() }
+    ),
     Entry("peak_hour", { it.hourDistribution.isNotEmpty() }),
     Entry("night", { lateNightRatio(it) >= 0.02 }),
     Entry("calendar", { it.dailyDistribution.isNotEmpty() }),
     Entry("loop_king", { it.loopTop.isNotEmpty() }),
     Entry("repeat_explore", { it.plays > 0 }),
-    Entry("genre_evolution", { it.genreByQuarter.isNotEmpty() }),
     Entry("sources", { it.sourceBreakdown.isNotEmpty() }),
     Entry("keywords", { true }),
     Entry("share", { true })
@@ -62,7 +66,8 @@ fun renderStoryPage(
   context: Context,
   nav: NavController,
   viewModel: AnnualReportViewModel,
-  paletteColors: List<Int>
+  paletteColors: List<Int>,
+  bestOverrides: Map<String, String>
 ) {
   val id = StoryPages.visible(report).getOrNull(index)?.id
   when (id) {
@@ -74,6 +79,7 @@ fun renderStoryPage(
     "repeat_explore" -> PageRepeatExplore(story)
     "sources" -> PageSources(report)
     "genre_evolution" -> PageGenreEvolution(report, context)
+    "year_best" -> PageYearBest(report, bestOverrides) { slot -> viewModel.swapBest(slot) }
     "keywords" -> PageKeywords(report, story, context)
     "share" -> PageShare(viewModel, nav)
     else -> PagePlaceholder(id ?: "")

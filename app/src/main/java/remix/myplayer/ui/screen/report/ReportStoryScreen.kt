@@ -60,7 +60,16 @@ fun ReportStoryScreen() {
     LocalReduceMotion provides reduceMotion
   ) {
     StoryPager(pageCount = pages.size) { page ->
-      renderStoryPage(page, report, story, context, nav, viewModel, state.paletteColors)
+      renderStoryPage(
+        page,
+        report,
+        story,
+        context,
+        nav,
+        viewModel,
+        state.paletteColors,
+        state.bestOverrides
+      )
     }
   }
 }
