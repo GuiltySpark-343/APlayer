@@ -2,10 +2,14 @@ package remix.myplayer.ui.screen.report
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.ui.screen.report.pages.PageCover
+import remix.myplayer.ui.screen.report.pages.PageKeywords
 import remix.myplayer.ui.screen.report.pages.PageOverview
 import remix.myplayer.ui.screen.report.pages.PagePlaceholder
+import remix.myplayer.ui.screen.report.pages.PageShare
+import remix.myplayer.viewmodel.AnnualReportViewModel
 
 /**
  * 页面注册表。新增页面只改这里。
@@ -47,12 +51,16 @@ fun renderStoryPage(
   index: Int,
   report: AnnualReport,
   story: ReportStoryResult,
-  context: Context
+  context: Context,
+  nav: NavController,
+  viewModel: AnnualReportViewModel
 ) {
   val id = StoryPages.visible(report).getOrNull(index)?.id
   when (id) {
     "cover" -> PageCover(report, story)
     "overview" -> PageOverview(report, context)
+    "keywords" -> PageKeywords(report, story, context)
+    "share" -> PageShare(viewModel, nav)
     else -> PagePlaceholder(id ?: "")
   }
 }
