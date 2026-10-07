@@ -2,6 +2,7 @@ package remix.myplayer.data.model.report
 
 import remix.myplayer.data.db.room.dao.DayCount
 import remix.myplayer.data.db.room.dao.GenreCount
+import remix.myplayer.data.db.room.dao.GenreQuarterCount
 import remix.myplayer.data.db.room.dao.HourCount
 import remix.myplayer.data.db.room.dao.LoopItem
 import remix.myplayer.data.db.room.dao.MonthCount
@@ -40,7 +41,10 @@ data class AnnualReport(
   val dailyDistribution: List<DayCount>,
   val loopTop: List<LoopItem>,
   val genreBreakdown: List<GenreCount>,
-  val lateNightTopSongs: List<TopPlayItem>
+  val lateNightTopSongs: List<TopPlayItem>,
+  // ---- P3-6 ----
+  /** 按季度的曲风分布（曲风进化史）。默认空，避免破坏其它构造点。 */
+  val genreByQuarter: List<GenreQuarterCount> = emptyList()
 )
 
 /**

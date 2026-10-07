@@ -258,6 +258,19 @@ interface PlayEventDao {
 
   @Query("DELETE FROM play_events WHERE year = :year")
   suspend fun deleteByYear(year: Int)
+
+  @Query(
+    """
+    SELECT ((month - 1) / 3 + 1) AS quarter, genreSnapshot AS genre,
+           COUNT(*) AS plays, COALESCE(SUM(listenedMs), 0) AS listenedMs
+    FROM play_events
+    WHERE eventType = 'playback' AND year = :year
+      AND genreSnapshot IS NOT NULL AND genreSnapshot != ''
+    GROUP BY quarter, genreSnapshot
+    ORDER BY quarter ASC, plays DESC
+    """
+  )
+  suspend fun genreByQuarter(year: Int): List<GenreQuarterCount>
 }
 
 data class TopPlayItem(
@@ -328,6 +341,13 @@ data class GenreCount(
 
 data class SourceCount(
   val source: String,
+  val plays: Int,
+  val listenedMs: Long
+)
+
+data class GenreQuarterCount(
+  val quarter: Int,
+  val genre: String,
   val plays: Int,
   val listenedMs: Long
 )

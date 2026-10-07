@@ -1,5 +1,6 @@
 package remix.myplayer.repo
 
+import remix.myplayer.data.db.room.dao.GenreQuarterCount
 import remix.myplayer.data.db.room.dao.PlayEventDao
 import remix.myplayer.data.db.room.entity.PlayEvent
 import remix.myplayer.data.model.report.AnnualReport
@@ -23,6 +24,9 @@ interface PlayEventRepository {
   suspend fun availableYears(): List<Int>
 
   suspend fun annualReport(year: Int): AnnualReport
+
+  /** P3-6：按季度的曲风分布（用于"曲风进化史"）。 */
+  suspend fun genreByQuarter(year: Int): List<GenreQuarterCount>
 
   suspend fun eventsOf(year: Int): List<PlayEvent>
 
@@ -84,9 +88,13 @@ class PlayEventRepoImpl @Inject constructor(
       dailyDistribution = playEventDao.dailyDistribution(year),
       loopTop = playEventDao.loopRanking(year, TOP_LIMIT),
       genreBreakdown = playEventDao.genreBreakdown(year, TOP_LIMIT),
-      lateNightTopSongs = playEventDao.lateNightTopSongs(year, TOP_LIMIT)
+      lateNightTopSongs = playEventDao.lateNightTopSongs(year, TOP_LIMIT),
+      genreByQuarter = playEventDao.genreByQuarter(year)
     )
   }
+
+  override suspend fun genreByQuarter(year: Int): List<GenreQuarterCount> =
+    playEventDao.genreByQuarter(year)
 
   override suspend fun clear() {
     playEventDao.clear()
