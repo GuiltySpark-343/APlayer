@@ -9,6 +9,8 @@ import remix.myplayer.ui.screen.report.pages.PageColors
 import remix.myplayer.ui.screen.report.pages.PageCover
 import remix.myplayer.ui.screen.report.pages.PageGenreEvolution
 import remix.myplayer.ui.screen.report.pages.PageKeywords
+import remix.myplayer.ui.screen.report.pages.PageLoopKing
+import remix.myplayer.ui.screen.report.pages.PageNight
 import remix.myplayer.ui.screen.report.pages.PageOverview
 import remix.myplayer.ui.screen.report.pages.PagePeakHour
 import remix.myplayer.ui.screen.report.pages.PagePlaceholder
@@ -75,7 +77,9 @@ fun renderStoryPage(
     "overview" -> PageOverview(report, context)
     "colors" -> PageColors(paletteColors)
     "peak_hour" -> PagePeakHour(report)
+    "night" -> PageNight(report, story)
     "calendar" -> PageCalendar(report)
+    "loop_king" -> PageLoopKing(report)
     "repeat_explore" -> PageRepeatExplore(story)
     "sources" -> PageSources(report)
     "genre_evolution" -> PageGenreEvolution(report, context)
