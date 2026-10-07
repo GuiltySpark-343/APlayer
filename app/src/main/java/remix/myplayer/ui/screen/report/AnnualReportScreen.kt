@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -44,7 +45,10 @@ import remix.myplayer.R
 import remix.myplayer.data.db.room.dao.DayCount
 import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.data.model.report.SongMoment
+import remix.myplayer.ui.component.report.StoryCard
 import remix.myplayer.ui.theme.LocalTheme
+import remix.myplayer.ui.theme.report.LocalReportTokens
+import remix.myplayer.ui.theme.report.ReportTokenDefaults
 import remix.myplayer.ui.widget.common.CommonAppBar
 import remix.myplayer.ui.widget.common.TextPrimary
 import remix.myplayer.ui.widget.common.TextSecondary
@@ -53,6 +57,15 @@ import java.util.Calendar
 
 @Composable
 fun AnnualReportScreen() {
+  // 令牌默认值等于海报配色；T4.4 起改由专辑主色派生
+  CompositionLocalProvider(LocalReportTokens provides ReportTokenDefaults.Dark) {
+    AnnualReportContent()
+  }
+}
+
+@Composable
+private fun AnnualReportContent() {
+  val tokens = LocalReportTokens.current
   val viewModel = annualReportViewModel
   val state by viewModel.state.collectAsStateWithLifecycle()
   val context = LocalContext.current
@@ -137,39 +150,39 @@ fun AnnualReportScreen() {
             onSelect = viewModel::selectYear
           )
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         MetricCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         ExtraMetricCard(report)
         state.previousReport?.let {
-          Spacer(Modifier.height(8.dp))
+          Spacer(Modifier.height(tokens.sectionGap))
           CompareCard(report, it)
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         MomentsCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         TopSongsCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         TopArtistsCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         TopAlbumsCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         TrendCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         HourCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         WeekdayCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         HeatmapCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         LateNightCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         LoopCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         GenreCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         SourceCard(report)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(tokens.sectionGap))
         ActionRow(
           onGeneratePlaylist = viewModel::generatePlaylist,
           onShareCard = viewModel::generatePoster,
@@ -203,7 +216,7 @@ private fun YearSelector(years: List<Int>, selected: Int, onSelect: (Int) -> Uni
 @Composable
 private fun MetricCard(report: AnnualReport) {
   val context = LocalContext.current
-  SectionCard {
+  StoryCard {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
       MetricItem(stringResource(R.string.stat_plays), report.plays.toString())
       MetricItem(stringResource(R.string.stat_listen_score), "%.1f".format(report.listenScore))
@@ -237,7 +250,7 @@ private fun ExtraMetricCard(report: AnnualReport) {
   val explore =
     if (report.distinctSongs > 0) report.firstListenedSongs.toDouble() / report.distinctSongs else 0.0
 
-  SectionCard {
+  StoryCard {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
       MetricItem(stringResource(R.string.stat_added_songs), report.addedSongs.toString())
       MetricItem(stringResource(R.string.stat_skip_rate), formatPercent(skipRate))
@@ -260,7 +273,7 @@ private fun ExtraMetricCard(report: AnnualReport) {
 @Composable
 private fun CompareCard(current: AnnualReport, previous: AnnualReport) {
   val context = LocalContext.current
-  SectionCard(title = stringResource(R.string.stat_compare) + " (" + previous.year + ")") {
+  StoryCard(title = stringResource(R.string.stat_compare) + " (" + previous.year + ")") {
     CompareRow(stringResource(R.string.stat_plays), previous.plays.toLong(), current.plays.toLong())
     CompareRow(
       stringResource(R.string.stat_listen_ms),
@@ -306,7 +319,7 @@ private fun CompareRow(
 @Composable
 private fun MomentsCard(report: AnnualReport) {
   if (report.firstPlay == null && report.lastPlay == null) return
-  SectionCard {
+  StoryCard {
     report.firstPlay?.let { MomentRow(stringResource(R.string.stat_first_song), it) }
     if (report.firstPlay != null && report.lastPlay != null) {
       Spacer(Modifier.height(8.dp))
@@ -338,7 +351,7 @@ private fun MetricItem(label: String, value: String) {
 
 @Composable
 private fun TopSongsCard(report: AnnualReport) {
-  SectionCard(title = stringResource(R.string.stat_top_songs)) {
+  StoryCard(title = stringResource(R.string.stat_top_songs)) {
     report.topSongs.forEachIndexed { index, item ->
       RankRow(index + 1, item.title, item.artist, item.listenedMs, item.plays)
     }
@@ -347,7 +360,7 @@ private fun TopSongsCard(report: AnnualReport) {
 
 @Composable
 private fun TopArtistsCard(report: AnnualReport) {
-  SectionCard(title = stringResource(R.string.stat_top_artists)) {
+  StoryCard(title = stringResource(R.string.stat_top_artists)) {
     report.topArtists.forEachIndexed { index, item ->
       RankRow(index + 1, item.name, "", item.listenedMs, item.plays)
     }
@@ -356,7 +369,7 @@ private fun TopArtistsCard(report: AnnualReport) {
 
 @Composable
 private fun TopAlbumsCard(report: AnnualReport) {
-  SectionCard(title = stringResource(R.string.stat_top_albums)) {
+  StoryCard(title = stringResource(R.string.stat_top_albums)) {
     report.topAlbums.forEachIndexed { index, item ->
       RankRow(index + 1, item.name, "", item.listenedMs, item.plays)
     }
@@ -392,7 +405,7 @@ private fun TrendCard(report: AnnualReport) {
   val maxMs = report.monthDistribution.maxOf { it.listenedMs }.coerceAtLeast(1L)
   val byMonth = HashMap<Int, Long>()
   report.monthDistribution.forEach { byMonth[it.month] = it.listenedMs }
-  SectionCard(title = stringResource(R.string.stat_trend)) {
+  StoryCard(title = stringResource(R.string.stat_trend)) {
     Row(
       modifier = Modifier.fillMaxWidth().height(64.dp),
       verticalAlignment = Alignment.Bottom,
@@ -423,7 +436,7 @@ private fun HourCard(report: AnnualReport) {
   report.hourDistribution.forEach { if (it.hour in 0..23) counts[it.hour] = it.plays }
   val maxPlays = counts.max().coerceAtLeast(1)
 
-  SectionCard(title = stringResource(R.string.stat_hours)) {
+  StoryCard(title = stringResource(R.string.stat_hours)) {
     Row(
       modifier = Modifier.fillMaxWidth().height(64.dp),
       verticalAlignment = Alignment.Bottom,
@@ -462,7 +475,7 @@ private fun WeekdayCard(report: AnnualReport) {
   report.weekdayDistribution.forEach { byWeekday[it.weekday] = it.plays }
   val maxPlays = (1..7).maxOf { byWeekday[it] ?: 0 }.coerceAtLeast(1)
 
-  SectionCard(title = stringResource(R.string.stat_weekday)) {
+  StoryCard(title = stringResource(R.string.stat_weekday)) {
     Row(
       modifier = Modifier.fillMaxWidth().height(56.dp),
       verticalAlignment = Alignment.Bottom,
@@ -494,7 +507,7 @@ private fun HeatmapCard(report: AnnualReport) {
   val maxMs = report.dailyDistribution.maxOf { it.listenedMs }.coerceAtLeast(1L)
   val daysInMonth = intArrayOf(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
-  SectionCard(title = stringResource(R.string.stat_heatmap)) {
+  StoryCard(title = stringResource(R.string.stat_heatmap)) {
     for (month in 1..12) {
       Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
@@ -529,7 +542,7 @@ private fun LateNightCard(report: AnnualReport) {
   if (latePlays == 0) return
   val ratio = if (report.plays > 0) latePlays.toDouble() / report.plays else 0.0
 
-  SectionCard(title = stringResource(R.string.stat_late_night)) {
+  StoryCard(title = stringResource(R.string.stat_late_night)) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
       MetricItem(stringResource(R.string.stat_late_night_ratio), formatPercent(ratio))
       MetricItem(stringResource(R.string.stat_listen_ms), formatTime(context, lateMs))
@@ -548,7 +561,7 @@ private fun LateNightCard(report: AnnualReport) {
 @Composable
 private fun LoopCard(report: AnnualReport) {
   if (report.loopTop.isEmpty()) return
-  SectionCard(title = stringResource(R.string.stat_loop_top)) {
+  StoryCard(title = stringResource(R.string.stat_loop_top)) {
     report.loopTop.take(5).forEachIndexed { index, item ->
       Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
@@ -575,7 +588,7 @@ private fun LoopCard(report: AnnualReport) {
 private fun GenreCard(report: AnnualReport) {
   if (report.genreBreakdown.isEmpty()) return
   val context = LocalContext.current
-  SectionCard(title = stringResource(R.string.stat_genre)) {
+  StoryCard(title = stringResource(R.string.stat_genre)) {
     report.genreBreakdown.forEach { g ->
       Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
@@ -593,7 +606,7 @@ private fun GenreCard(report: AnnualReport) {
 
 @Composable
 private fun SourceCard(report: AnnualReport) {
-  SectionCard(title = stringResource(R.string.stat_sources)) {
+  StoryCard(title = stringResource(R.string.stat_sources)) {
     report.sourceBreakdown.forEach { s ->
       Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
@@ -648,21 +661,6 @@ private fun SectionButton(text: String, onClick: () -> Unit) {
       .padding(vertical = 12.dp)
       .clickable { onClick() }
   )
-}
-
-@Composable
-private fun SectionCard(title: String? = null, content: @Composable () -> Unit) {
-  Column(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(horizontal = 12.dp, vertical = 6.dp)
-  ) {
-    if (title != null) {
-      TextPrimary(text = title, fontSize = 16.sp)
-      Spacer(Modifier.height(6.dp))
-    }
-    content()
-  }
 }
 
 private fun formatTime(context: Context, ms: Long): String {
