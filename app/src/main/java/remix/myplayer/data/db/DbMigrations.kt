@@ -115,4 +115,12 @@ internal object DbMigrations {
       )
     }
   }
+
+  val migration11to12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL(
+        "CREATE TABLE IF NOT EXISTS `report_overrides` (`year` INTEGER NOT NULL, `slot` TEXT NOT NULL, `canonicalId` TEXT NOT NULL, `audioId` INTEGER, `title` TEXT NOT NULL, `artist` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`year`, `slot`))"
+      )
+    }
+  }
 }
