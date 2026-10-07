@@ -1,9 +1,12 @@
 package remix.myplayer.ui.screen.report
 
 import android.content.Context
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
+import remix.myplayer.R
 import remix.myplayer.data.model.report.AnnualReport
+import remix.myplayer.ui.component.report.ThemedBackground
 import remix.myplayer.ui.screen.report.pages.PageCalendar
 import remix.myplayer.ui.screen.report.pages.PageColors
 import remix.myplayer.ui.screen.report.pages.PageCover
@@ -72,20 +75,36 @@ fun renderStoryPage(
   bestOverrides: Map<String, String>
 ) {
   val id = StoryPages.visible(report).getOrNull(index)?.id
-  when (id) {
-    "cover" -> PageCover(report, story)
-    "overview" -> PageOverview(report, context)
-    "colors" -> PageColors(paletteColors)
-    "peak_hour" -> PagePeakHour(report)
-    "night" -> PageNight(report, story)
-    "calendar" -> PageCalendar(report)
-    "loop_king" -> PageLoopKing(report)
-    "repeat_explore" -> PageRepeatExplore(story)
-    "sources" -> PageSources(report)
-    "genre_evolution" -> PageGenreEvolution(report, context)
-    "year_best" -> PageYearBest(report, bestOverrides) { slot -> viewModel.swapBest(slot) }
-    "keywords" -> PageKeywords(report, story, context)
-    "share" -> PageShare(viewModel, nav)
-    else -> PagePlaceholder(id ?: "")
+  ThemedBackground(backgroundFor(id ?: "")) {
+    when (id) {
+      "cover" -> PageCover(report, story)
+      "overview" -> PageOverview(report, context)
+      "colors" -> PageColors(paletteColors)
+      "peak_hour" -> PagePeakHour(report)
+      "night" -> PageNight(report, story)
+      "calendar" -> PageCalendar(report)
+      "loop_king" -> PageLoopKing(report)
+      "repeat_explore" -> PageRepeatExplore(story)
+      "sources" -> PageSources(report)
+      "genre_evolution" -> PageGenreEvolution(report, context)
+      "year_best" -> PageYearBest(report, bestOverrides) { slot -> viewModel.swapBest(slot) }
+      "keywords" -> PageKeywords(report, story, context)
+      "share" -> PageShare(viewModel, nav)
+      else -> PagePlaceholder(id ?: "")
+    }
   }
+}
+
+/**
+ * 页面 → 底图槽位。6 张底图覆盖 13 页，靠染色、栽切与 scrim 区分。
+ * 与 docs/report-asset-spec.md 的 slot 表对应。
+ */
+@DrawableRes
+private fun backgroundFor(id: String): Int = when (id) {
+  "cover" -> R.drawable.report_bg_cover_a
+  "overview" -> R.drawable.report_bg_overview_a
+  "colors", "keywords" -> R.drawable.report_bg_media_a
+  "night" -> R.drawable.report_bg_night_a
+  "peak_hour", "calendar", "sources", "genre_evolution" -> R.drawable.report_bg_chart_a
+  else -> R.drawable.report_bg_rank_a
 }
