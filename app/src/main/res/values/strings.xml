@@ -678,4 +678,6 @@
   <string name="poster_hours_suffix">h</string>
   <string name="story_overview_caption">%1$d plays · %2$d songs · %3$d days</string>
   <string name="story_poster_loading">Rendering…</string>
+  <string name="chart_legend_less">Less</string>
+  <string name="chart_legend_more">More</string>
 </resources>
