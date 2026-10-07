@@ -32,6 +32,12 @@
 | T3.1 | ⚠️ | 88c17a4e | 通过 | **待截图** | `ChartFrame`：标题 + 固定高度画布 + 可选图例；横向内边距交给 StoryPage，避免双重留白 |
 | T3.2 | ⚠️ | ff8238ba | 通过 | **待截图**；几何已自检（0 点起始角 `-90°`、每小时 15°、缝隙 13.5°） | `PolarClockChart`：半径随播放量生长，圆心标峰值小时，0/6/12/18 刻度 |
 | T3.3 | ⚠️ | b60121b4 | 通过 | **待截图**；尺寸已数值自检：1080px 屏（density 2.75）下可用宽 970px、月标签 77px、gap 5.5px → `cell ≈ 23.5px`、`gridHeight ≈ 342px`（画布高 522px，**放得下**） | `CalendarHeatmap`：cell 由可用宽度反推（**不写死**，海报踩过此坑）、5 档色阶、逐月生长、月份标签 + legend；新增 `chart_legend_less/more` |
+| T4.3 | ⚠️ | 本次提交 | 通过 | **配色可读性已数值验证**：复现 `fromAccent` 的 HSL 推导，对 24 个色相算 WCAG 对比度——白字/bgTop 最低 16.99、白字/bgBottom 最低 11.56、次要文字/bgTop 最低 9.12、**accent/bgTop 最低 5.13（hue240 蓝）**，全部 ≥ AA 4.5。**待截图** | `AlbumColorRepository.colorsInOrder`（按听歌顺序）、`ReportUiState.paletteColors`、`PaletteStrip`、`PageColors`、`StoryPages` 新增 `colors` 页 |
+| T4.4 | ⚠️ | 本次提交 | 通过 | 同上（配色已数值验证）；**待截图** | 新增统一入口 `reportTokensFor(paletteColors)`，页面与海报共用；`generatePoster` 改为传同一套令牌 |
+| — | ✅ | 332395d4 | 通过 | — | 补充 `DatabaseModule` 的 `AlbumColorDao` / `ReportOverrideDao` 提供（Hilt 缺 provider 会编译失败，属 T4.3/T6.2 的必要收尾） |
+| T3.4 | ⚠️ | 本次提交 | 通过 | **待截图** | `TrendLineChart`：4 条网格线、Path + 渐变填充（alpha 0.18）、PathMeasure 生长、峰值点标注、X 轴 1/4/7/10 |
+| T3.5 | ⚠️ | 本次提交 | 通过 | **待截图** | `DonutChart`：弧段留 1° 缝隙、圆心写最大项占比、右侧图例；弧形按 progress 生长 |
+| T3.6 | ⚠️ | 本次提交 | 通过 | **待截图** | `DualBarCompare`（用 Compose 布局实现，**无坐标计算故无溢出风险**：左条右生长、右条左生长）+ `GenreBands`（分段色带按阶段播放量占比，段内按曲风用 alpha 区分）；`PaletteStrip` 已在 T4.3 落地 |
 
 ## 阻塞
 
