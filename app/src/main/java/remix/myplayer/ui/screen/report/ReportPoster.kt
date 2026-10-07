@@ -25,6 +25,50 @@ object ReportPoster {
 
   private const val PAD = 80f
 
+  /** 排名行距与段落节奏：两段榜单共用一套节奏，段落间距必须与指标卡之后的间距一致。 */
+  private const val LIST_ROWS = 3
+  private const val LIST_FIRST_ROW_OFFSET = 62f
+  private const val LIST_ROW_PITCH = 58f
+  private const val SECTION_GAP = 90f
+
+  /** 指标卡：值文本超出可用宽度时按 2f 步进缩字，缩到下限仍放不下才省略。 */
+  private const val METRIC_CARD_WIDTH = 215f
+  private const val METRIC_CARD_GAP = 20f
+  private const val METRIC_CARD_HEIGHT = 150f
+  private const val METRIC_VALUE_SIZE = 50f
+  private const val METRIC_VALUE_MIN_SIZE = 30f
+  private const val METRIC_LABEL_SIZE = 26f
+  private const val METRIC_LABEL_MIN_SIZE = 18f
+  private const val METRIC_TEXT_INSET = 12f
+
+  private const val HEATMAP_CELL = 8f
+  private const val HEATMAP_GAP = 2f
+
+  /** 榜单两列的起点与可用宽度：宽度必须由画布反推，否则副标题会冲出右边界。 */
+  private const val LIST_RANK_X = PAD + 60f
+  private const val LIST_SUB_X = PAD + 720f
+  private const val LIST_COLUMN_GAP = 20f
+  private const val LIST_TITLE_WIDTH = LIST_SUB_X - LIST_RANK_X - LIST_COLUMN_GAP
+  private const val LIST_SUB_WIDTH = WIDTH - PAD - LIST_SUB_X
+
+  /** 不得出现在行首的标点（中文避头点）。 */
+  private const val NO_LINE_START = "，。、；：？！）］｝」』〉》”’·…—～%,.!?:;)]}"
+
+  private const val SONGS_TOP = 880f
+
+  /** 热力图是图块，与上方榜单的间距单独取，比文字段落略紧，避免底部压到页脚。 */
+  private const val HEATMAP_GAP_ABOVE = 74f
+
+  private val ARTISTS_TOP = nextSectionTop(SONGS_TOP)
+  private val HEATMAP_TOP = lastRowBaseline(ARTISTS_TOP) + HEATMAP_GAP_ABOVE
+
+  /** 一段榜单最后一行文字的基线。 */
+  private fun lastRowBaseline(top: Float) =
+    top + LIST_FIRST_ROW_OFFSET + LIST_ROW_PITCH * (LIST_ROWS - 1)
+
+  /** 一段榜单结束后的下一个段落标题基线。 */
+  private fun nextSectionTop(top: Float) = lastRowBaseline(top) + SECTION_GAP
+
   private const val COLOR_BG_TOP = "#141628"
   private const val COLOR_BG_BOTTOM = "#2A2450"
   private const val COLOR_TEXT = "#FFFFFF"
@@ -62,17 +106,17 @@ object ReportPoster {
       context,
       canvas,
       context.getString(R.string.poster_top_songs),
-      report.topSongs.take(3).map { it.title to it.artist },
-      880f
+      report.topSongs.take(LIST_ROWS).map { it.title to it.artist },
+      SONGS_TOP
     )
     drawList(
       context,
       canvas,
       context.getString(R.string.poster_top_artists),
-      report.topArtists.take(3).map { it.name to "" },
-      1120f
+      report.topArtists.take(LIST_ROWS).map { it.name to "" },
+      ARTISTS_TOP
     )
-    drawHeatmap(canvas, report, 1340f)
+    drawHeatmap(canvas, report, HEATMAP_TOP)
 
     canvas.drawText(
       context.getString(R.string.poster_footer),
@@ -100,12 +144,8 @@ object ReportPoster {
 
   private fun drawMetrics(context: Context, canvas: Canvas, report: AnnualReport, top: Float) {
     val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor(COLOR_CARD) }
-    val valuePaint = paint(COLOR_TEXT, 50f, true)
-    val labelPaint = paint(COLOR_TEXT_SUB, 26f)
-
-    val boxWidth = 215f
-    val gap = 20f
-    val height = 150f
+    val valuePaint = paint(COLOR_TEXT, METRIC_VALUE_SIZE, true)
+    val labelPaint = paint(COLOR_TEXT_SUB, METRIC_LABEL_SIZE)
 
     val plays = report.plays.toString()
     val time = formatDuration(context, report.listenMs)
@@ -123,15 +163,21 @@ object ReportPoster {
       complete to context.getString(R.string.poster_metric_complete)
     )
 
+    val textWidth = METRIC_CARD_WIDTH - METRIC_TEXT_INSET * 2f
+
     items.forEachIndexed { index, item ->
-      val left = PAD + index * (boxWidth + gap)
+      val left = PAD + index * (METRIC_CARD_WIDTH + METRIC_CARD_GAP)
       canvas.drawRoundRect(
-        RectF(left, top, left + boxWidth, top + height),
+        RectF(left, top, left + METRIC_CARD_WIDTH, top + METRIC_CARD_HEIGHT),
         24f, 24f, cardPaint
       )
-      val centerX = left + boxWidth / 2f
-      drawCentered(canvas, item.first, centerX, top + 72f, valuePaint)
-      drawCentered(canvas, item.second, centerX, top + 118f, labelPaint)
+      val centerX = left + METRIC_CARD_WIDTH / 2f
+      drawCenteredFitted(
+        canvas, item.first, centerX, top + 72f, valuePaint, textWidth, METRIC_VALUE_MIN_SIZE
+      )
+      drawCenteredFitted(
+        canvas, item.second, centerX, top + 118f, labelPaint, textWidth, METRIC_LABEL_MIN_SIZE
+      )
     }
   }
 
@@ -149,11 +195,11 @@ object ReportPoster {
     val subPaint = paint(COLOR_TEXT_SUB, 28f)
 
     items.forEachIndexed { index, item ->
-      val baseline = top + 62f + index * 62f
+      val baseline = top + LIST_FIRST_ROW_OFFSET + index * LIST_ROW_PITCH
       canvas.drawText((index + 1).toString(), PAD, baseline, rankPaint)
-      canvas.drawText(ellipsize(item.first, titlePaint, 640f), PAD + 60f, baseline, titlePaint)
+      canvas.drawText(ellipsize(item.first, titlePaint, LIST_TITLE_WIDTH), LIST_RANK_X, baseline, titlePaint)
       if (item.second.isNotEmpty()) {
-        canvas.drawText(ellipsize(item.second, subPaint, 320f), PAD + 720f, baseline, subPaint)
+        canvas.drawText(ellipsize(item.second, subPaint, LIST_SUB_WIDTH), LIST_SUB_X, baseline, subPaint)
       }
     }
   }
@@ -164,8 +210,8 @@ object ReportPoster {
     val maxMs = report.dailyDistribution.maxOfOrNull { it.listenedMs }?.coerceAtLeast(1L) ?: 1L
     val daysInMonth = intArrayOf(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
-    val cell = 10f
-    val gap = 2f
+    val cell = HEATMAP_CELL
+    val gap = HEATMAP_GAP
     val baseColor = Color.parseColor(COLOR_ACCENT)
     val cellPaint = Paint()
 
@@ -216,6 +262,30 @@ object ReportPoster {
     canvas.drawText(text, centerX - paint.measureText(text) / 2f, baseline, paint)
   }
 
+  /**
+   * 居中绘制，超出 [maxWidth] 时按 2f 步进缩字，缩到 [minTextSize] 仍放不下才加省略号。
+   * 指标卡宽度固定，动态数值（如 1234.5 小时）必须靠这条规则兜住，否则会压到相邻卡片。
+   */
+  private fun drawCenteredFitted(
+    canvas: Canvas,
+    text: String,
+    centerX: Float,
+    baseline: Float,
+    paint: Paint,
+    maxWidth: Float,
+    minTextSize: Float
+  ) {
+    val baseTextSize = paint.textSize
+    var size = baseTextSize
+    while (size > minTextSize && paint.measureText(text) > maxWidth) {
+      size -= 2f
+      paint.textSize = size
+    }
+    val fitted = if (paint.measureText(text) > maxWidth) ellipsize(text, paint, maxWidth) else text
+    drawCentered(canvas, fitted, centerX, baseline, paint)
+    paint.textSize = baseTextSize
+  }
+
   private fun ellipsize(text: String, paint: Paint, maxWidth: Float): String {
     if (paint.measureText(text) <= maxWidth) return text
     var end = text.length
@@ -225,12 +295,16 @@ object ReportPoster {
     return text.substring(0, end) + "…"
   }
 
+  /**
+   * 按宽度折行，并对中文做避头点处理：标点不落在行首（挤在上一行行尾，即标点悬挂）。
+   */
   private fun wrap(text: String, paint: Paint, maxWidth: Float): List<String> {
     val lines = ArrayList<String>()
     val sb = StringBuilder()
     for (ch in text) {
+      val hangsAtLineEnd = NO_LINE_START.indexOf(ch) >= 0
       val candidate = sb.toString() + ch
-      if (sb.isNotEmpty() && paint.measureText(candidate) > maxWidth) {
+      if (sb.isNotEmpty() && !hangsAtLineEnd && paint.measureText(candidate) > maxWidth) {
         lines.add(sb.toString())
         sb.setLength(0)
       }

@@ -2,6 +2,7 @@
 
 package remix.myplayer.ui.screen.report
 
+import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -201,6 +202,7 @@ private fun YearSelector(years: List<Int>, selected: Int, onSelect: (Int) -> Uni
 
 @Composable
 private fun MetricCard(report: AnnualReport) {
+  val context = LocalContext.current
   SectionCard {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
       MetricItem(stringResource(R.string.stat_plays), report.plays.toString())
@@ -211,7 +213,7 @@ private fun MetricCard(report: AnnualReport) {
       modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
       horizontalArrangement = Arrangement.SpaceBetween
     ) {
-      MetricItem(stringResource(R.string.stat_listen_ms), formatTime(report.listenMs))
+      MetricItem(stringResource(R.string.stat_listen_ms), formatTime(context, report.listenMs))
       MetricItem(stringResource(R.string.stat_days), report.listenedDays.toString())
       MetricItem(stringResource(R.string.stat_first_listened), report.firstListenedSongs.toString())
     }
@@ -257,13 +259,14 @@ private fun ExtraMetricCard(report: AnnualReport) {
 
 @Composable
 private fun CompareCard(current: AnnualReport, previous: AnnualReport) {
+  val context = LocalContext.current
   SectionCard(title = stringResource(R.string.stat_compare) + " (" + previous.year + ")") {
     CompareRow(stringResource(R.string.stat_plays), previous.plays.toLong(), current.plays.toLong())
     CompareRow(
       stringResource(R.string.stat_listen_ms),
       previous.listenMs,
       current.listenMs
-    ) { formatTime(it) }
+    ) { formatTime(context, it) }
     CompareRow(
       stringResource(R.string.stat_completed),
       previous.completedPlays.toLong(),
@@ -362,6 +365,7 @@ private fun TopAlbumsCard(report: AnnualReport) {
 
 @Composable
 private fun RankRow(rank: Int, title: String, subtitle: String, listenMs: Long, plays: Int) {
+  val context = LocalContext.current
   Row(
     modifier = Modifier
       .fillMaxWidth()
@@ -376,7 +380,7 @@ private fun RankRow(rank: Int, title: String, subtitle: String, listenMs: Long, 
       }
     }
     Column(horizontalAlignment = Alignment.End) {
-      TextPrimary(text = formatTime(listenMs), fontSize = 13.sp)
+      TextPrimary(text = formatTime(context, listenMs), fontSize = 13.sp)
       TextSecondary(text = plays.toString() + " x", fontSize = 12.sp)
     }
   }
@@ -518,6 +522,7 @@ private fun HeatmapCard(report: AnnualReport) {
 
 @Composable
 private fun LateNightCard(report: AnnualReport) {
+  val context = LocalContext.current
   val late = report.hourDistribution.filter { it.hour in 0..5 }
   val latePlays = late.sumOf { it.plays }
   val lateMs = late.sumOf { it.listenedMs }
@@ -527,7 +532,7 @@ private fun LateNightCard(report: AnnualReport) {
   SectionCard(title = stringResource(R.string.stat_late_night)) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
       MetricItem(stringResource(R.string.stat_late_night_ratio), formatPercent(ratio))
-      MetricItem(stringResource(R.string.stat_listen_ms), formatTime(lateMs))
+      MetricItem(stringResource(R.string.stat_listen_ms), formatTime(context, lateMs))
       MetricItem(stringResource(R.string.stat_plays), latePlays.toString())
     }
     if (report.lateNightTopSongs.isNotEmpty()) {
@@ -569,6 +574,7 @@ private fun LoopCard(report: AnnualReport) {
 @Composable
 private fun GenreCard(report: AnnualReport) {
   if (report.genreBreakdown.isEmpty()) return
+  val context = LocalContext.current
   SectionCard(title = stringResource(R.string.stat_genre)) {
     report.genreBreakdown.forEach { g ->
       Row(
@@ -577,7 +583,7 @@ private fun GenreCard(report: AnnualReport) {
       ) {
         TextPrimary(text = g.genre, fontSize = 14.sp)
         TextSecondary(
-          text = g.plays.toString() + "  ·  " + formatTime(g.listenedMs),
+          text = g.plays.toString() + "  ·  " + formatTime(context, g.listenedMs),
           fontSize = 12.sp
         )
       }
@@ -659,12 +665,12 @@ private fun SectionCard(title: String? = null, content: @Composable () -> Unit) 
   }
 }
 
-private fun formatTime(ms: Long): String {
-  val minutes = ms / 60000.0
-  return if (minutes < 60) {
-    "%.1f min".format(minutes)
+private fun formatTime(context: Context, ms: Long): String {
+  val hours = ms / 3600000.0
+  return if (hours >= 1) {
+    context.getString(R.string.poster_hours, hours)
   } else {
-    "%.1f h".format(minutes / 60.0)
+    context.getString(R.string.poster_minutes, (ms / 60000L).toInt())
   }
 }
 
