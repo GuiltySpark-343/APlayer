@@ -7,6 +7,7 @@ import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.ui.screen.report.pages.PageCalendar
 import remix.myplayer.ui.screen.report.pages.PageColors
 import remix.myplayer.ui.screen.report.pages.PageCover
+import remix.myplayer.ui.screen.report.pages.PageGenreEvolution
 import remix.myplayer.ui.screen.report.pages.PageKeywords
 import remix.myplayer.ui.screen.report.pages.PageOverview
 import remix.myplayer.ui.screen.report.pages.PagePeakHour
@@ -36,6 +37,7 @@ object StoryPages {
     Entry("calendar", { it.dailyDistribution.isNotEmpty() }),
     Entry("loop_king", { it.loopTop.isNotEmpty() }),
     Entry("repeat_explore", { it.plays > 0 }),
+    Entry("genre_evolution", { it.genreByQuarter.isNotEmpty() }),
     Entry("sources", { it.sourceBreakdown.isNotEmpty() }),
     Entry("keywords", { true }),
     Entry("share", { true })
@@ -71,6 +73,7 @@ fun renderStoryPage(
     "calendar" -> PageCalendar(report)
     "repeat_explore" -> PageRepeatExplore(story)
     "sources" -> PageSources(report)
+    "genre_evolution" -> PageGenreEvolution(report, context)
     "keywords" -> PageKeywords(report, story, context)
     "share" -> PageShare(viewModel, nav)
     else -> PagePlaceholder(id ?: "")

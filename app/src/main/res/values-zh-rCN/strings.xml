@@ -662,4 +662,5 @@
   <string name="story_poster_loading">生成中…</string>
   <string name="chart_legend_less">少</string>
   <string name="chart_legend_more">多</string>
+  <string name="chart_quarter">第%1$d季度</string>
 </resources>
