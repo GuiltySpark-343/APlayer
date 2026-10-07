@@ -26,6 +26,9 @@ import remix.myplayer.BuildConfig
 import remix.myplayer.ui.activity.base.BaseMusicActivity
 import remix.myplayer.ui.nav.AppNav
 import remix.myplayer.ui.nav.LocalNavController
+import remix.myplayer.ui.nav.PendingRoute
+import remix.myplayer.ui.nav.RouteAnnualReport
+import remix.myplayer.ui.nav.annualReportDeepLink
 import remix.myplayer.ui.nav.playingScreenDeepLink
 import remix.myplayer.ui.theme.APlayerTheme
 import remix.myplayer.ui.theme.LocalTheme
@@ -98,6 +101,16 @@ class ComposeActivity : BaseMusicActivity() {
     handleIntent()
   }
 
+  /**
+   * App 已在前台时系统走 onNewIntent，此时不会触发 onResume，
+   * 必须在这里重新分发一次 intent，否则 deep link 在热启动下不生效。
+   */
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    handleIntent()
+  }
+
   override fun onConfigurationChanged(newConfig: Configuration) {
     super.onConfigurationChanged(newConfig)
     themeController.onSystemThemeChanged(newConfig.uiMode)
@@ -105,8 +118,11 @@ class ComposeActivity : BaseMusicActivity() {
 
   private fun handleIntent() {
     intent?.data?.let {
-      when (it.scheme) {
-        playingScreenDeepLink.scheme -> {
+      when {
+        // 报告页：只登记路由请求，由 AppNav 消费（NavController 在 composition 内）
+        it.host == annualReportDeepLink.host -> PendingRoute.request(RouteAnnualReport)
+
+        it.scheme == playingScreenDeepLink.scheme -> {
           Timber.v("deepLink")
           lifecycleScope.launch {
             val state = mainViewModel.playingScreenState

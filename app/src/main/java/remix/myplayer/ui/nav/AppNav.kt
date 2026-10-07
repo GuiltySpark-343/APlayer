@@ -14,11 +14,13 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDeepLink
@@ -91,9 +93,23 @@ const val ExtraRestorePlayingScreen = "restore_playing_screen"
 
 val playingScreenDeepLink = "aplayer://playingScreen".toUri()
 
+/** 年度听歌报告（附录页）。用于真机截图验证脚本直接打开该页。 */
+val annualReportDeepLink = "aplayer://annual_report".toUri()
+
 @Composable
 fun AppNav() {
   val snackBarHostState = remember { SnackbarHostState() }
+
+  // 消费 Activity intent 登记的一次性路由请求（见 PendingRoute）
+  val nav = LocalNavController.current
+  val pendingRoute by PendingRoute.route.collectAsStateWithLifecycle()
+  LaunchedEffect(pendingRoute) {
+    pendingRoute?.let {
+      PendingRoute.consume()
+      nav.navigate(it)
+    }
+  }
+
   ProvideSnackBarHostState(snackBarHostState) {
     Box(modifier = Modifier.fillMaxSize()) {
       AppScaffold {

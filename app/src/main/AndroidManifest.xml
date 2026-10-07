@@ -96,6 +96,7 @@
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
         <data android:scheme="aplayer" android:host="playing_screen" />
+        <data android:scheme="aplayer" android:host="annual_report" />
       </intent-filter>
     </activity>
 
