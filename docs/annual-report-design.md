@@ -128,7 +128,9 @@ ReportScreen（页面）
 
 - 全局唯一设计方案：`docs/play-event-design.md`（第 0 章分层与路线图、第 10 章 v2 字段）
 - 跨平台协议规范：`docs/play-event-protocol-spec.md`
+- 展示层设计（调研 + 页面脚本 + 元素清单 + 分期）：`docs/annual-report-presentation-design.md`
 - 导出样例：`docs/samples/play-events-2026.sample.jsonl`
+- 调研原始材料（抓取的正文）：`docs/research/raw/`
 
 ---
 
