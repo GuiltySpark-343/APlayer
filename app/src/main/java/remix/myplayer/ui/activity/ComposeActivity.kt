@@ -28,7 +28,9 @@ import remix.myplayer.ui.nav.AppNav
 import remix.myplayer.ui.nav.LocalNavController
 import remix.myplayer.ui.nav.PendingRoute
 import remix.myplayer.ui.nav.RouteAnnualReport
+import remix.myplayer.ui.nav.RouteAnnualReportStory
 import remix.myplayer.ui.nav.annualReportDeepLink
+import remix.myplayer.ui.nav.annualReportStoryDeepLink
 import remix.myplayer.ui.nav.playingScreenDeepLink
 import remix.myplayer.ui.theme.APlayerTheme
 import remix.myplayer.ui.theme.LocalTheme
@@ -121,6 +123,9 @@ class ComposeActivity : BaseMusicActivity() {
       when {
         // 报告页：只登记路由请求，由 AppNav 消费（NavController 在 composition 内）
         it.host == annualReportDeepLink.host -> PendingRoute.request(RouteAnnualReport)
+
+        it.host == annualReportStoryDeepLink.host ->
+          PendingRoute.request(RouteAnnualReportStory)
 
         it.scheme == playingScreenDeepLink.scheme -> {
           Timber.v("deepLink")

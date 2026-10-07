@@ -55,6 +55,7 @@ import remix.myplayer.ui.screen.SongChooserScreen
 import remix.myplayer.ui.screen.SupportScreen
 import remix.myplayer.ui.screen.TagEditScreen
 import remix.myplayer.ui.screen.report.AnnualReportScreen
+import remix.myplayer.ui.screen.report.ReportStoryScreen
 import remix.myplayer.ui.screen.crop.CropScreen
 import remix.myplayer.ui.screen.detail.DetailScreen
 import remix.myplayer.ui.screen.history.HistoryScreen
@@ -86,6 +87,7 @@ const val RouteTagEditCrop = "tag_edit_crop"
 const val RouteEq = "eq"
 const val RouteSupport = "support"
 const val RouteAnnualReport = "annual_report"
+const val RouteAnnualReportStory = "annual_report_story"
 
 // 存在目标页 NavBackStackEntry.savedStateHandle 里的标志，
 // 标记该页是从播放页浮窗跳转过来的，退出时需要恢复浮窗
@@ -95,6 +97,9 @@ val playingScreenDeepLink = "aplayer://playingScreen".toUri()
 
 /** 年度听歌报告（附录页）。用于真机截图验证脚本直接打开该页。 */
 val annualReportDeepLink = "aplayer://annual_report".toUri()
+
+/** 年度报告主线（叙事流）。同样只用于 host 匹配。 */
+val annualReportStoryDeepLink = "aplayer://annual_report_story".toUri()
 
 @Composable
 fun AppNav() {
@@ -277,6 +282,10 @@ fun AppNav() {
 
             normalAnimatedScreen(RouteAnnualReport) {
               AnnualReportScreen()
+            }
+
+            normalAnimatedScreen(RouteAnnualReportStory) {
+              ReportStoryScreen()
             }
           }
         }

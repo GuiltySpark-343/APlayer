@@ -97,6 +97,7 @@
         <category android:name="android.intent.category.DEFAULT" />
         <data android:scheme="aplayer" android:host="playing_screen" />
         <data android:scheme="aplayer" android:host="annual_report" />
+        <data android:scheme="aplayer" android:host="annual_report_story" />
       </intent-filter>
     </activity>
 
