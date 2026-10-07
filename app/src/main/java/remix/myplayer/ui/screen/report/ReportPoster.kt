@@ -9,8 +9,12 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.toArgb
 import remix.myplayer.R
 import remix.myplayer.data.model.report.AnnualReport
+import remix.myplayer.ui.theme.report.ReportTokenDefaults
+import remix.myplayer.ui.theme.report.ReportTokens
 
 /**
  * P2：年度报告海报渲染器。
@@ -69,83 +73,86 @@ object ReportPoster {
   /** 一段榜单结束后的下一个段落标题基线。 */
   private fun nextSectionTop(top: Float) = lastRowBaseline(top) + SECTION_GAP
 
-  private const val COLOR_BG_TOP = "#141628"
-  private const val COLOR_BG_BOTTOM = "#2A2450"
-  private const val COLOR_TEXT = "#FFFFFF"
-  private const val COLOR_TEXT_SUB = "#B9BCDA"
-  private const val COLOR_ACCENT = "#8C9BFF"
-  private const val COLOR_CARD = "#22FFFFFF"
-  private const val COLOR_FOOTER = "#7A7E9E"
-
-  fun render(context: Context, report: AnnualReport, story: ReportStoryResult): Bitmap {
+  fun render(
+    context: Context,
+    report: AnnualReport,
+    story: ReportStoryResult,
+    tokens: ReportTokens = ReportTokenDefaults.Dark
+  ): Bitmap {
     val bitmap = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
 
-    drawBackground(canvas)
+    drawBackground(canvas, tokens)
 
-    canvas.drawText(report.year.toString(), PAD, 200f, paint(COLOR_TEXT, 132f, true))
+    canvas.drawText(report.year.toString(), PAD, 200f, paint(tokens.textPrimary, 132f, true))
     canvas.drawText(
       context.getString(R.string.poster_subtitle),
       PAD,
       272f,
-      paint(COLOR_SUB(), 42f)
+      paint(tokens.textSecondary, 42f)
     )
 
     val keywordText = story.keywords.joinToString(" · ") { context.getString(it.titleRes) }
-    canvas.drawText(keywordText, PAD, 380f, paint(COLOR_ACCENT, 60f, true))
+    canvas.drawText(keywordText, PAD, 380f, paint(tokens.accent, 60f, true))
 
-    val storyPaint = paint("#E6E7F2", 34f)
+    val storyPaint = paint(tokens.textPrimary, 34f)
     var y = 452f
     wrap(buildStory(context, report, story), storyPaint, WIDTH - PAD * 2).forEach { line ->
       canvas.drawText(line, PAD, y, storyPaint)
       y += 48f
     }
 
-    drawMetrics(context, canvas, report, 640f)
+    drawMetrics(context, canvas, report, 640f, tokens)
     drawList(
       context,
       canvas,
       context.getString(R.string.poster_top_songs),
       report.topSongs.take(LIST_ROWS).map { it.title to it.artist },
-      SONGS_TOP
+      SONGS_TOP,
+      tokens
     )
     drawList(
       context,
       canvas,
       context.getString(R.string.poster_top_artists),
       report.topArtists.take(LIST_ROWS).map { it.name to "" },
-      ARTISTS_TOP
+      ARTISTS_TOP,
+      tokens
     )
-    drawHeatmap(canvas, report, HEATMAP_TOP)
+    drawHeatmap(canvas, report, HEATMAP_TOP, tokens)
 
     canvas.drawText(
       context.getString(R.string.poster_footer),
       PAD,
       HEIGHT - 50f,
-      paint(COLOR_FOOTER, 26f)
+      paint(tokens.textFooter, 26f)
     )
 
     return bitmap
   }
 
-  private fun COLOR_SUB(): String = COLOR_TEXT_SUB
-
-  private fun drawBackground(canvas: Canvas) {
+  private fun drawBackground(canvas: Canvas, tokens: ReportTokens) {
     val paint = Paint().apply {
       shader = LinearGradient(
         0f, 0f, 0f, HEIGHT.toFloat(),
-        Color.parseColor(COLOR_BG_TOP),
-        Color.parseColor(COLOR_BG_BOTTOM),
+        tokens.bgTop.toArgb(),
+        tokens.bgBottom.toArgb(),
         Shader.TileMode.CLAMP
       )
     }
     canvas.drawRect(0f, 0f, WIDTH.toFloat(), HEIGHT.toFloat(), paint)
   }
 
-  private fun drawMetrics(context: Context, canvas: Canvas, report: AnnualReport, top: Float) {
-    val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor(COLOR_CARD) }
-    val valuePaint = paint(COLOR_TEXT, METRIC_VALUE_SIZE, true)
-    val labelPaint = paint(COLOR_TEXT_SUB, METRIC_LABEL_SIZE)
+  private fun drawMetrics(
+    context: Context,
+    canvas: Canvas,
+    report: AnnualReport,
+    top: Float,
+    tokens: ReportTokens
+  ) {
+    val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = tokens.cardBg.toArgb() }
+    val valuePaint = paint(tokens.textPrimary, METRIC_VALUE_SIZE, true)
+    val labelPaint = paint(tokens.textSecondary, METRIC_LABEL_SIZE)
 
     val plays = report.plays.toString()
     val time = formatDuration(context, report.listenMs)
@@ -186,13 +193,14 @@ object ReportPoster {
     canvas: Canvas,
     title: String,
     items: List<Pair<String, String>>,
-    top: Float
+    top: Float,
+    tokens: ReportTokens
   ) {
-    canvas.drawText(title, PAD, top, paint(COLOR_ACCENT, 36f, true))
+    canvas.drawText(title, PAD, top, paint(tokens.accent, 36f, true))
 
-    val rankPaint = paint(COLOR_ACCENT, 34f, true)
-    val titlePaint = paint(COLOR_TEXT, 36f)
-    val subPaint = paint(COLOR_TEXT_SUB, 28f)
+    val rankPaint = paint(tokens.accent, 34f, true)
+    val titlePaint = paint(tokens.textPrimary, 36f)
+    val subPaint = paint(tokens.textSecondary, 28f)
 
     items.forEachIndexed { index, item ->
       val baseline = top + LIST_FIRST_ROW_OFFSET + index * LIST_ROW_PITCH
@@ -204,7 +212,7 @@ object ReportPoster {
     }
   }
 
-  private fun drawHeatmap(canvas: Canvas, report: AnnualReport, top: Float) {
+  private fun drawHeatmap(canvas: Canvas, report: AnnualReport, top: Float, tokens: ReportTokens) {
     val byDay = HashMap<Pair<Int, Int>, Long>()
     report.dailyDistribution.forEach { byDay[it.month to it.day] = it.listenedMs }
     val maxMs = report.dailyDistribution.maxOfOrNull { it.listenedMs }?.coerceAtLeast(1L) ?: 1L
@@ -212,7 +220,7 @@ object ReportPoster {
 
     val cell = HEATMAP_CELL
     val gap = HEATMAP_GAP
-    val baseColor = Color.parseColor(COLOR_ACCENT)
+    val baseColor = tokens.accent.toArgb()
     val cellPaint = Paint()
 
     for (month in 1..12) {
@@ -251,9 +259,9 @@ object ReportPoster {
     }
   }
 
-  private fun paint(colorHex: String, size: Float, bold: Boolean = false): Paint =
+  private fun paint(color: ComposeColor, size: Float, bold: Boolean = false): Paint =
     Paint(Paint.ANTI_ALIAS_FLAG).apply {
-      color = Color.parseColor(colorHex)
+      this.color = color.toArgb()
       textSize = size
       typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
     }
