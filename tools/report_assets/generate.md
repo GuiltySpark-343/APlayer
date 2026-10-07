@@ -1,5 +1,17 @@
 # 报告底图出图手册（P3-7 / T7.3）
 
+> ## 当前状态（重要）
+> **已用程序化方案产出一套可用底图**：`tools/report_assets/generate_procedural.py`，
+> 产物 `app/src/main/res/drawable-nodpi/report_bg_{cover,overview,media,chart,rank,night}_a.webp`，
+> 6 张合计 **100 KB**，全部通过 `docs/report-asset-spec.md` 的亮度/体积校验。
+> `ThemedBackground` 已接入叙事流，**应用当前显示的就是这套底图**。
+>
+> 本手册描述的是**扩散模型方案（方案 B）**。它的产物与程序化产物**同名**，
+> 因此出图后直接覆盖同名文件即可，**代码零改动**。按设计文档 §4.4 的判定点，
+> 只有确实需要"具象场景插画"时才值得启动方案 B。
+>
+> ---
+
 > 目标：从零产出一批**无文字、灰度、可染色**的背景底图，规格见 `docs/report-asset-spec.md`。
 > 本机硬件：**NVIDIA RTX 4060 Ti 16GB**，驱动 610.88（`nvidia-smi` 可用）。
 > 本机现状：**尚未安装 ComfyUI**；python 为 anaconda 3.11.5，**未安装 torch**。因此第 1 节是从零搭建。
