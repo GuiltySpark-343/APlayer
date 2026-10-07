@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import remix.myplayer.ui.theme.report.LocalReportTokens
 
@@ -39,7 +40,18 @@ fun StoryPager(
       .fillMaxSize()
       .background(Brush.verticalGradient(listOf(tokens.bgTop, tokens.bgBottom)))
   ) {
-    HorizontalPager(state = state, modifier = Modifier.weight(1f)) { page -> content(page) }
+    HorizontalPager(state = state, modifier = Modifier.weight(1f)) { page ->
+      // 翻页视差：相邻页按偏移量反向微移，幅度固定 40f
+      val reduceMotion = LocalReduceMotion.current
+      val offset = (page - state.currentPage) + state.currentPageOffsetFraction
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .graphicsLayer { translationX = if (reduceMotion) 0f else -offset * 40f }
+      ) {
+        content(page)
+      }
+    }
     StoryProgress(current = state.currentPage, count = pageCount)
   }
 }
