@@ -149,47 +149,115 @@ lateNightTopSongs: List<TopPlayItem>
 
 **为什么**：后续每个 UI Task 都要截图核对，不能依赖人工点进设置。
 
-**改 1**：`ui/nav/AppNav.kt`
+> **⚠️ 执行修订（2026-10-07，已完成，提交 `8158f594`）**
+> 原方案（`deepLinks = listOf(NavDeepLink(...))`）**在本项目里不可行**，两点原因：
+> 1. `androidx.navigation.NavDeepLink` 的 `constructor(uriPattern, action, mimeType)` 在这个版本里是 **internal**，直接 `NavDeepLink(uri)` 编译不过；
+> 2. `LocalNavController` 是 composition 内 `rememberNavController()` 提供的（`ComposeActivity:140`），Activity 的 `handleIntent()` **拿不到** NavController，而项目现有的 `playingScreenDeepLink` 也只是被 `Notify`/`ComposeActivity` 当普通 Intent data 用，并未走 navigation 的 deep link。
+>
+> 实际采用的方案（已验证冷启动 + 热启动两条路径）：
 
-在 `const val RouteAnnualReport = "annual_report"` 之后新增常量，并在 `playingScreenDeepLink`（第 92 行）附近新增：
+**改 1**：新建 `ui/nav/PendingRoute.kt`（Activity → Compose 的一次性路由通道）
 
 ```kotlin
-val annualReportDeepLink = "aplayer://annual_report".toUri()
+package remix.myplayer.ui.nav
+
+import kotlinx.coroutines.flow.MutableStateFlow
+
+/**
+ * 从 Activity 的 intent 到 Compose 导航的一次性请求通道。
+ *
+ * 为什么不用 NavDeepLink：本项目的 LocalNavController 是 composition 内
+ * `rememberNavController()` 提供的，Activity 的 handleIntent() 拿不到它；
+ * 用 StateFlow 暂存请求再由 AppNav 消费，可避免依赖 onResume 与首帧的先后顺序。
+ */
+object PendingRoute {
+
+  val route = MutableStateFlow<String?>(null)
+
+  fun request(route: String) {
+    this.route.value = route
+  }
+
+  fun consume() {
+    route.value = null
+  }
+}
 ```
 
-把第 262-264 行改成：
+**改 2**：`ui/nav/AppNav.kt`
 
-```kotlin
-            normalAnimatedScreen(
-              RouteAnnualReport,
-              deepLinks = listOf(NavDeepLink(annualReportDeepLink))
-            ) {
-              AnnualReportScreen()
-            }
-```
+- 在 `playingScreenDeepLink` 附近新增常量（**只用于 host 匹配，不再传给 navigation**）：
+  ```kotlin
+  /** 年度听歌报告（附录页）。用于真机截图验证脚本直接打开该页。 */
+  val annualReportDeepLink = "aplayer://annual_report".toUri()
+  ```
+- **`RouteAnnualReport` 的注册保持原样** `normalAnimatedScreen(RouteAnnualReport) { AnnualReportScreen() }`（不要传 `deepLinks`）。
+- 在 `AppNav()` 顶部加消费者：
+  ```kotlin
+  // 消费 Activity intent 登记的一次性路由请求（见 PendingRoute）
+  val nav = LocalNavController.current
+  val pendingRoute by PendingRoute.route.collectAsStateWithLifecycle()
+  LaunchedEffect(pendingRoute) {
+    pendingRoute?.let {
+      PendingRoute.consume()
+      nav.navigate(it)
+    }
+  }
+  ```
+- 补 import：`androidx.compose.runtime.getValue`、`androidx.lifecycle.compose.collectAsStateWithLifecycle`。
 
-补 import：`androidx.navigation.NavDeepLink`、`androidx.core.net.toUri`（若已存在则不重复）。
+**改 3**：`ui/activity/ComposeActivity.kt`
 
-**改 2**：`app/src/main/AndroidManifest.xml`
+- `handleIntent()` 的 `when (it.scheme)` 改为 `when { }`，**host 判断必须放在最前**，否则 `aplayer://annual_report` 会被当成播放页、而落到 `else` 分支还会被当歌曲 URI 去播放：
+  ```kotlin
+  when {
+    // 报告页：只登记路由请求，由 AppNav 消费（NavController 在 composition 内）
+    it.host == annualReportDeepLink.host -> PendingRoute.request(RouteAnnualReport)
 
-在第 98 行 `<data android:scheme="aplayer" android:host="playing_screen" />` 之后加一行（同一个 intent-filter 内）：
+    it.scheme == playingScreenDeepLink.scheme -> { /* 原逻辑不变 */ }
+
+    else -> { /* 原逻辑不变 */ }
+  }
+  ```
+- **必须新增 `onNewIntent`**：App 已在前台时系统走 `onNewIntent`，不会触发 `onResume`，热启动下 deep link 会失效：
+  ```kotlin
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    handleIntent()
+  }
+  ```
+- 补 import：`PendingRoute`、`RouteAnnualReport`、`annualReportDeepLink`。
+
+**改 4**：`app/src/main/AndroidManifest.xml`
+
+在 ComposeActivity 的 `aplayer` intent-filter 内（`playing_screen` 那行之后）加：
 
 ```xml
         <data android:scheme="aplayer" android:host="annual_report" />
 ```
 
-**验收**
+**验收（两条路径都要过）**
 
 ```powershell
-# 构建 + 安装后
+$adb = "D:/Application2/Android/Sdk/platform-tools/adb.exe"
+$pkg = "remix.myplayer.debug"
+
+# A. 冷启动：杀掉进程后直接 deep link
+& $adb shell am force-stop $pkg
 & $adb shell am start -a android.intent.action.VIEW -d "aplayer://annual_report"
-# 3 秒后截图，确认停在「年度听歌报告」页
-& $adb exec-out screencap -p > "docs/screenshots/t0.1-report-open.png"
+& $adb shell screencap -p /sdcard/b.png; & $adb pull /sdcard/b.png docs/screenshots/t0.1-report-open.png
+
+# B. 热启动：先回到首页（抽屉态），再 deep link，验证 onNewIntent
+& $adb shell am start -n "$pkg/remix.myplayer.ui.activity.ComposeActivity"
+& $adb shell screencap -p /sdcard/a.png; & $adb pull /sdcard/a.png docs/screenshots/t0.1-before-warm.png
+& $adb shell am start -a android.intent.action.VIEW -d "aplayer://annual_report"
+& $adb shell screencap -p /sdcard/b.png; & $adb pull /sdcard/b.png docs/screenshots/t0.1-report-open.png
 ```
 
-若 deep link 未生效，对照检查：manifest 的 host 必须与 `annualReportDeepLink` 中的 host **完全一致**（`annual_report`）；`am start` 不要漏 `-a android.intent.action.VIEW`。
+两条路径截图都必须停在「年度听歌报告」页（`t0.1-before-warm.png` 用于证明热启动前**不在**该页）。
 
-**提交**：`feat(report): add deep link for annual report screen`
+**提交**：`feat(report): open annual report via aplayer deep link`（已完成：`8158f594`）
 
 ---
 
