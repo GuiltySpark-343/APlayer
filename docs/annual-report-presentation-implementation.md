@@ -794,7 +794,7 @@ fun PageCover(report: AnnualReport, story: ReportStoryResult) {
     )
     Spacer(Modifier.height(48.dp))
     TextPrimary(
-      text = story.keywords.joinToString(" · ") { stringResource(it.titleRes) },
+      text = keywordLabels.joinToString(" · "),
       fontSize = tokens.titleSize * 1.5f,
       fontWeight = FontWeight.Bold,
       color = tokens.accent
@@ -806,6 +806,17 @@ fun PageCover(report: AnnualReport, story: ReportStoryResult) {
 ```
 
 > `TextUnit` 的乘法只使用 `* Float` 形式（`* 2f`），不要写 `* 2`，避免依赖不确定的重载。
+
+> **⚠️ `stringResource` 不能在 `joinToString` 里调用**：`joinToString` 的 transform 参数**不是 inline lambda**，
+> 在其中调用 `@Composable` 会编译报错 `@Composable invocations can only happen from the context of a @Composable function`。
+> 正确写法是先用 `forEach`（inline，允许）解析成字符串：
+>
+> ```kotlin
+> val keywordLabels = ArrayList<String>(story.keywords.size)
+> story.keywords.forEach { keywordLabels.add(stringResource(it.titleRes)) }
+> ```
+>
+> 然后 `keywordLabels.joinToString(" · ")`。此坑已在执行中实际踩到并修正（见自检 5）。
 
 **新建** `ui/screen/report/pages/PageOverview.kt`：
 
@@ -1741,6 +1752,16 @@ P3-8 (T8.1)                    附录页整理
 | — | 任务编号连续性 | **通过**：34 个小节覆盖 35 个 Task（T6.3/T6.4 合并同一小节），无缺号无重号 |
 | — | 每个 Task 是否都有：前置 / 改动文件 / 代码或规则 / 验收 / 提交信息 | **通过** |
 | — | 是否还有"留给执行者设计"的开口 | **通过**：字符串、颜色公式、scrim 公式、迁移 SQL、图表几何规则、页面充分性条件均已写死 |
+
+### 自检 5 — 执行中发现并回写的计划缺陷
+
+计划不是一次写对的。以下缺陷**编译/运行时才暴露**，已回写进对应章节，避免后续执行者重踩：
+
+| # | 位置 | 缺陷 | 修正 |
+| --- | --- | --- | --- |
+| 1 | T0.1 | `NavDeepLink(uri)` 构造函数在该 navigation 版本为 **internal**；且 `LocalNavController` 在 composition 内创建，Activity 的 `handleIntent()` **拿不到** NavController，热启动还不触发 `onResume` | 改为 `PendingRoute` 状态通道 + `onNewIntent` 显式分发（提交 `8158f594`） |
+| 2 | T2.4 | `story.keywords.joinToString { stringResource(...) }` —— `joinToString` 的 transform **不是 inline lambda**，编译报 `@Composable invocations can only happen from the context of a @Composable function` | 先 `forEach`（inline）解析 `stringResource` 成字符串列表，再 `joinToString` |
+| 3 | 执行环境 | 本机 shell 是 Windows PowerShell 5.1，**没有 `pwsh` 命令**；截图脚本要用 `& <path>\shots.ps1` 调用 | 已记入台账"注意事项" |
 
 ### 自检 4 — 待执行中回填
 

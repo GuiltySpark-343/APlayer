@@ -16,8 +16,8 @@
 | T2.1 | ✅ | 本次提交 | 通过 | 待接线后截图 | `StoryPage` / `StoryPager`（背景只在 Pager 画） |
 | T2.2 | ✅ | 本次提交 | 通过 | 待接线后截图 | `HeroNumber`（Animatable 800ms）/ `Caption` |
 | T2.3 | ✅ | 本次提交 | 通过 | 构建即验证 | 7 个字符串 key 已加（en + zh-rCN），加前已查重 |
-| T2.4 | ⬜ 待做 | — | — | — | S0/S1 两页 |
-| T2.5 | ⬜ 待做 | — | — | — | 叙事页容器 + 导航接线 + 附录降级 |
+| T2.4 | ✅ | 本次提交 | 通过 | 待截图 | `PageCover`（S0）/ `PageOverview`（S1）+ `poster_hours_suffix`、`story_overview_caption` 两个字符串。**执行中修掉计划里的一个编译错误**：`joinToString` 的 lambda 不是 inline，不能调 `stringResource`，改为先 `forEach` 解析 |
+| T2.5 | ✅ | 本次提交 | 通过 | 待截图 | `StoryPages`（页面注册表 + `visible()`）、`renderStoryPage`、`PagePlaceholder`、`ReportStoryScreen`、路由 `annual_report_story` + deep link + manifest host + 设置入口改指向叙事页。`keywords`/`share` 暂走占位页，由 T2.6 替换 |
 
 ## 阻塞
 
