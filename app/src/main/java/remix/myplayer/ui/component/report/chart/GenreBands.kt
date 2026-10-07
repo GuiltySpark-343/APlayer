@@ -17,6 +17,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import remix.myplayer.data.db.room.dao.GenreCount
+import remix.myplayer.ui.component.report.reportTween
 import remix.myplayer.ui.theme.report.LocalReportTokens
 
 /** 曲风进化的一个阶段（如 1 个季度）。 */
@@ -43,7 +44,7 @@ fun GenreBands(
 
   val progress by animateFloatAsState(
     targetValue = 1f,
-    animationSpec = tween(600),
+    animationSpec = reportTween(600),
     label = "genreBands"
   )
   val measurer = rememberTextMeasurer()

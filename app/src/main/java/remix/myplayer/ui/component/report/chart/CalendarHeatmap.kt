@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import remix.myplayer.R
 import remix.myplayer.data.db.room.dao.DayCount
+import remix.myplayer.ui.component.report.reportTween
 import remix.myplayer.ui.theme.report.LocalReportTokens
 import remix.myplayer.ui.widget.common.TextSecondary
 
@@ -68,7 +69,7 @@ fun CalendarHeatmap(
 
   val progress by animateFloatAsState(
     targetValue = 1f,
-    animationSpec = tween(600),
+    animationSpec = reportTween(600),
     label = "heatmap"
   )
   val measurer = rememberTextMeasurer()

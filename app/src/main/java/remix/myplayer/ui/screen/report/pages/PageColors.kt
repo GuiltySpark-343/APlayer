@@ -9,6 +9,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import remix.myplayer.R
 import remix.myplayer.ui.component.report.Caption
+import remix.myplayer.ui.component.report.FadeInStaggered
 import remix.myplayer.ui.component.report.StoryPage
 import remix.myplayer.ui.component.report.chart.PaletteStrip
 import remix.myplayer.ui.theme.report.LocalReportTokens
@@ -21,15 +22,17 @@ fun PageColors(colors: List<Int>) {
   if (colors.isEmpty()) return
 
   StoryPage {
-    TextPrimary(
-      text = stringResource(R.string.story_color),
-      fontSize = tokens.titleSize * 1.5f,
-      fontWeight = FontWeight.Bold,
-      color = tokens.accent
-    )
+    FadeInStaggered(0) {
+      TextPrimary(
+        text = stringResource(R.string.story_color),
+        fontSize = tokens.titleSize * 1.5f,
+        fontWeight = FontWeight.Bold,
+        color = tokens.accent
+      )
+    }
     Spacer(Modifier.height(24.dp))
-    PaletteStrip(colors = colors)
+    FadeInStaggered(1) { PaletteStrip(colors = colors) }
     Spacer(Modifier.height(24.dp))
-    Caption(stringResource(R.string.story_color_caption))
+    FadeInStaggered(2) { Caption(stringResource(R.string.story_color_caption)) }
   }
 }

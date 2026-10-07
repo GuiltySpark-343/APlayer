@@ -1,5 +1,6 @@
 package remix.myplayer.ui.screen.report
 
+import android.provider.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -7,8 +8,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import remix.myplayer.ui.component.report.LocalReduceMotion
 import remix.myplayer.ui.component.report.StoryPager
 import remix.myplayer.ui.nav.LocalNavController
 import remix.myplayer.ui.theme.report.LocalReportTokens
@@ -43,7 +46,19 @@ fun ReportStoryScreen() {
   val nav = LocalNavController.current
   val tokens = reportTokensFor(state.paletteColors)
 
-  CompositionLocalProvider(LocalReportTokens provides tokens) {
+  // 系统"移除动画"打开时不播任何动效
+  val reduceMotion = remember(context) {
+    Settings.Global.getFloat(
+      context.contentResolver,
+      Settings.Global.ANIMATOR_DURATION_SCALE,
+      1f
+    ) == 0f
+  }
+
+  CompositionLocalProvider(
+    LocalReportTokens provides tokens,
+    LocalReduceMotion provides reduceMotion
+  ) {
     StoryPager(pageCount = pages.size) { page ->
       renderStoryPage(page, report, story, context, nav, viewModel, state.paletteColors)
     }

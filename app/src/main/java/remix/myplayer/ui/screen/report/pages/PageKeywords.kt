@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import remix.myplayer.R
 import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.ui.component.report.Caption
+import remix.myplayer.ui.component.report.FadeInStaggered
 import remix.myplayer.ui.component.report.StoryPage
 import remix.myplayer.ui.screen.report.ReportStoryResult
 import remix.myplayer.ui.theme.report.LocalReportTokens
@@ -49,28 +50,32 @@ fun PageKeywords(report: AnnualReport, story: ReportStoryResult, context: Contex
   )
 
   StoryPage {
-    FlowRow(
-      horizontalArrangement = Arrangement.Center,
-      verticalArrangement = Arrangement.Center
-    ) {
-      labels.forEach { label ->
-        Box(
-          modifier = Modifier
-            .padding(6.dp)
-            .clip(RoundedCornerShape(tokens.cardRadius))
-            .background(tokens.cardBg)
-            .padding(horizontal = 18.dp, vertical = 10.dp)
-        ) {
-          TextPrimary(
-            text = label,
-            fontSize = tokens.titleSize,
-            fontWeight = FontWeight.Bold,
-            color = tokens.accent
-          )
+    FadeInStaggered(0) {
+      FlowRow(
+        horizontalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Center
+      ) {
+        labels.forEach { label ->
+          Box(
+            modifier = Modifier
+              .padding(6.dp)
+              .clip(RoundedCornerShape(tokens.cardRadius))
+              .background(tokens.cardBg)
+              .padding(horizontal = 18.dp, vertical = 10.dp)
+          ) {
+            TextPrimary(
+              text = label,
+              fontSize = tokens.titleSize,
+              fontWeight = FontWeight.Bold,
+              color = tokens.accent
+            )
+          }
         }
       }
     }
     Spacer(Modifier.height(24.dp))
-    Caption(sentence, maxLine = 4)
+    FadeInStaggered(1) {
+      Caption(sentence, maxLine = 4)
+    }
   }
 }

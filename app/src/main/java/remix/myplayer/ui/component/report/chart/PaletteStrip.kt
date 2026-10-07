@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import remix.myplayer.ui.component.report.reportTween
 import remix.myplayer.ui.theme.report.LocalReportTokens
 import remix.myplayer.ui.widget.common.TextSecondary
 
@@ -39,7 +40,7 @@ fun PaletteStrip(
 
   val progress by animateFloatAsState(
     targetValue = 1f,
-    animationSpec = tween(600),
+    animationSpec = reportTween(600),
     label = "palette"
   )
 

@@ -26,10 +26,15 @@ fun HeroNumber(
   durationMs: Int = 800
 ) {
   val tokens = LocalReportTokens.current
+  val reduceMotion = LocalReduceMotion.current
   val anim = remember { Animatable(0f) }
-  LaunchedEffect(target) {
-    anim.snapTo(0f)
-    anim.animateTo(target, tween(durationMs, easing = FastOutSlowInEasing))
+  LaunchedEffect(target, reduceMotion) {
+    if (reduceMotion) {
+      anim.snapTo(target)
+    } else {
+      anim.snapTo(0f)
+      anim.animateTo(target, tween(durationMs, easing = FastOutSlowInEasing))
+    }
   }
   TextPrimary(
     text = format(anim.value) + suffix,

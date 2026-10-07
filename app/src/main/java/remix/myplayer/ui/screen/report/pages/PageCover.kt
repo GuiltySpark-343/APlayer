@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import remix.myplayer.R
 import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.ui.component.report.Caption
+import remix.myplayer.ui.component.report.FadeInStaggered
 import remix.myplayer.ui.component.report.StoryPage
 import remix.myplayer.ui.screen.report.ReportStoryResult
 import remix.myplayer.ui.theme.report.LocalReportTokens
@@ -26,20 +27,26 @@ fun PageCover(report: AnnualReport, story: ReportStoryResult) {
   story.keywords.forEach { keywordLabels.add(stringResource(it.titleRes)) }
 
   StoryPage {
-    TextPrimary(
-      text = report.year.toString(),
-      fontSize = tokens.heroSize * 2f,
-      fontWeight = FontWeight.Bold,
-      color = tokens.textPrimary
-    )
+    FadeInStaggered(0) {
+      TextPrimary(
+        text = report.year.toString(),
+        fontSize = tokens.heroSize * 2f,
+        fontWeight = FontWeight.Bold,
+        color = tokens.textPrimary
+      )
+    }
     Spacer(Modifier.height(48.dp))
-    TextPrimary(
-      text = keywordLabels.joinToString(" · "),
-      fontSize = tokens.titleSize * 1.5f,
-      fontWeight = FontWeight.Bold,
-      color = tokens.accent
-    )
+    FadeInStaggered(1) {
+      TextPrimary(
+        text = keywordLabels.joinToString(" · "),
+        fontSize = tokens.titleSize * 1.5f,
+        fontWeight = FontWeight.Bold,
+        color = tokens.accent
+      )
+    }
     Spacer(Modifier.height(24.dp))
-    Caption(stringResource(R.string.story_start_hint), color = tokens.textFooter)
+    FadeInStaggered(2) {
+      Caption(stringResource(R.string.story_start_hint), color = tokens.textFooter)
+    }
   }
 }

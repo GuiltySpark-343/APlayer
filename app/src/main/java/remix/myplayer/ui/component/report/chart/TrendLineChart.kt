@@ -20,6 +20,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import remix.myplayer.data.db.room.dao.MonthCount
+import remix.myplayer.ui.component.report.reportTween
 import remix.myplayer.ui.theme.report.LocalReportTokens
 
 /**
@@ -42,7 +43,7 @@ fun TrendLineChart(
 
   val progress by animateFloatAsState(
     targetValue = 1f,
-    animationSpec = tween(600),
+    animationSpec = reportTween(600),
     label = "trendLine"
   )
   val measurer = rememberTextMeasurer()

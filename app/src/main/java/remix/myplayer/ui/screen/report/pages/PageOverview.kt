@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import remix.myplayer.R
 import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.ui.component.report.Caption
+import remix.myplayer.ui.component.report.FadeInStaggered
 import remix.myplayer.ui.component.report.HeroNumber
 import remix.myplayer.ui.component.report.StoryPage
 
@@ -16,19 +17,23 @@ import remix.myplayer.ui.component.report.StoryPage
 @Composable
 fun PageOverview(report: AnnualReport, context: Context) {
   StoryPage {
-    HeroNumber(
-      target = report.listenMs / 3_600_000f,
-      format = { "%.1f".format(it) },
-      suffix = " " + context.getString(R.string.poster_hours_suffix)
-    )
-    Spacer(Modifier.height(16.dp))
-    Caption(
-      context.getString(
-        R.string.story_overview_caption,
-        report.plays,
-        report.distinctSongs,
-        report.listenedDays
+    FadeInStaggered(0) {
+      HeroNumber(
+        target = report.listenMs / 3_600_000f,
+        format = { "%.1f".format(it) },
+        suffix = " " + context.getString(R.string.poster_hours_suffix)
       )
-    )
+    }
+    Spacer(Modifier.height(16.dp))
+    FadeInStaggered(1) {
+      Caption(
+        context.getString(
+          R.string.story_overview_caption,
+          report.plays,
+          report.distinctSongs,
+          report.listenedDays
+        )
+      )
+    }
   }
 }
