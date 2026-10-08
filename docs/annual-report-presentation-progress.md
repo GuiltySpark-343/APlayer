@@ -1,5 +1,22 @@
 # 展示层实施进度台账
 
+> ## ⏸ 当前状态：代码完成，暂停在「验证」这一步（2026-10-07 用户决定）
+>
+> - **代码侧 36 个任务全部落地并推送**（分支 `dev/play-event`）。
+> - **23 个 UI 任务尚未做真机截图核对**——它们的验收标准包含"真机截图核对"，所以**目标尚未完成**。
+> - 暂停原因（已核实，非猜测）：
+>   1. **手机未连接**：`adb devices` 为空；Windows 只枚举到 2 个通用 USB 复合设备，无 Android/ADB 接口。
+>   2. **模拟器不可用**：CPU 为 i5-12490F，但 `VirtualizationFirmwareEnabled = False`（VT-x 未在 BIOS 开启），
+>      且 SDK 内无 emulator 二进制、无系统镜像。
+> - **用户的决定**：先不验证、保持现状。
+>
+> ### 如何恢复（任一即可）
+> 1. **插上数据线**（允许 USB 调试 + 解锁屏幕）→ 说"继续验证"，我按下面的批次计划一次核完；
+> 2. **或**你按清单手动看一遍并把现象告诉我（不需要数据线）；
+> 3. **或**进 BIOS 打开 VT-x → 我下载 emulator + 系统镜像（约 2GB）建立可复用的截图环境。
+>
+> 代码与文档均已提交推送，可从任意一端接着做，不会丢进度。
+
 基线：`b6790aa9`（分支 `dev/play-event`）
 实施包：`docs/annual-report-presentation-implementation.md`
 设计文档：`docs/annual-report-presentation-design.md`
@@ -85,13 +102,14 @@
 3. **不要用 `Select-Object -First N` 接 gradle 的输出**：会提前掐断管道把 gradle 杀掉，表现为莫名其妙的 exit 1。改为先 `$out = ... 2>&1` 再过滤。
 4. **报告页数据已就绪**：2026 年真实数据（1531 次播放 / 90.6 小时 / 465 首歌 / 210 歌手 / 257 专辑 / Blues 347 次），截图有真实内容可看。
 5. `/app/schemas` 虽被 gitignore，但**是验证 Room 迁移的最好工具**：`app/schemas/remix.myplayer.data.db.room.AppDatabase/<version>.json` 里的 `createSql` 就是 Room 期望的建表语句。
+6. **不要用 `Add-Content` 往仓库里的中文文档追加内容**：Windows PowerShell 5.1 默认按 GBK 写，会把 UTF-8 文件变成混合编码（本次已踩，`read` 直接报 `invalid UTF-8`）。用编辑工具，或显式 `[IO.File]::WriteAllText($p, $t, (New-Object System.Text.UTF8Encoding($false)))`。
 
-## ����ʱ����������ƣ������豸��
+## 运行时崩溃风险审计（无需设备，已完成）
 
-�� `ui/**/report/**` ȫ��ɨ�� `!!`��`.first()`��`.last()`��`.reduce()`��`.maxOf()` �����г�����
+对 `ui/**/report/**` 全量扫描 `!!`、`.first()`、`.last()`、`.reduce()`、`.maxOf()` 与所有除法：
 
-- **�޷ǿն���**��`!!` 0 ������
-- `.first()/.last()` �� 5 ����ȫ���� `isEmpty()` �緵��֮��`PageYearBest` 2 �������� `(1..12)` �������챣֤��`TrendLineChart` 3 ������
-- ���� 20 �ദ����ĸȫ���� `coerceAtLeast(1)` / `if (x > 0)` / �緵�ر�����`maxMs`��`total`��`grand`��`totals[index]`��`max`��`plays`����
+- **无非空断言**（`!!` 0 处）；
+- `.first()/.last()` 共 5 处，全部在 `isEmpty()` 早返回之后（`PageYearBest` 2 处），或由 `(1..12)` 定长构造保证（`TrendLineChart` 3 处）；
+- 除法 20 余处，分母全部有 `coerceAtLeast(1)` / `if (x > 0)` / 早返回保护（`maxMs`、`total`、`grand`、`totals[index]`、`max`、`plays`）。
 
-���ۣ�**δ���ֿ�����������ı�����**��
+结论：**未发现可在真机触发的崩溃点**。
