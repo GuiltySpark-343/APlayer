@@ -104,6 +104,32 @@ fun TagPanelSheet(
           TextPrimary(text = state.songTitle, fontSize = 16.sp)
           Spacer(Modifier.height(2.dp))
           TextSecondary(text = stringResource(R.string.tag_score_hint), fontSize = 11.sp)
+
+          // 撤销行放在顶部：面板底部在高屏幕占比下可能被裁切（实测踩到）
+          state.lastTagName?.let { name ->
+            Spacer(Modifier.height(6.dp))
+            Row(
+              modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalTheme.current.primary.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              TextSecondary(
+                text = stringResource(R.string.tag_added_toast, name),
+                fontSize = 12.sp,
+                modifier = Modifier.weight(1f)
+              )
+              Text(
+                text = stringResource(R.string.tag_undo),
+                color = LocalTheme.current.primary,
+                fontSize = 14.sp,
+                modifier = Modifier
+                  .clickable { onUndo() }
+                  .padding(horizontal = 8.dp, vertical = 2.dp)
+              )
+            }
+          }
           Spacer(Modifier.height(10.dp))
 
           Column(
@@ -206,27 +232,6 @@ fun TagPanelSheet(
             )
           }
 
-          state.lastTagName?.let { name ->
-            Spacer(Modifier.height(8.dp))
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              TextSecondary(
-                text = stringResource(R.string.tag_added_toast, name),
-                fontSize = 12.sp,
-                modifier = Modifier.weight(1f)
-              )
-              Text(
-                text = stringResource(R.string.tag_undo),
-                color = LocalTheme.current.primary,
-                fontSize = 14.sp,
-                modifier = Modifier
-                  .clickable { onUndo() }
-                  .padding(horizontal = 8.dp, vertical = 4.dp)
-              )
-            }
-          }
         }
       }
     }
