@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import remix.myplayer.data.db.room.entity.WebDav
+import java.util.Calendar
 
 internal object DbMigrations {
 
@@ -121,6 +122,51 @@ internal object DbMigrations {
       db.execSQL(
         "CREATE TABLE IF NOT EXISTS `report_overrides` (`year` INTEGER NOT NULL, `slot` TEXT NOT NULL, `canonicalId` TEXT NOT NULL, `audioId` INTEGER, `title` TEXT NOT NULL, `artist` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`year`, `slot`))"
       )
+    }
+  }
+
+  /**
+   * v12 之前 `year/month/day/hour/weekday` 是按 UTC 派生的（`startedAt/endedAt` 一直是正确的 UTC 毫秒）。
+   * 这一版只把数据库版本推到 13；实际回填见 [migration13to14]。
+   */
+  val migration12to13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+    }
+  }
+
+  /**
+   * 把历史数据的派生列从 UTC 改成设备本地时区。
+   *
+   * 用 JVM 的 `Calendar` 逐行重算，而不用 SQL 的 `strftime(..., 'localtime')`：实测在真机上
+   * 迁移里的那段 SQL 一行都没改（派生列仍是 UTC 值），而同样的 SQL 在设备的 sqlite3 CLI 上却是对的，
+   * 说明依赖平台 SQLite 的时区处理不可靠。逐行重算与 PlayEventRecorder 用同一套 API，
+   * 结果确定、与平台无关，并且可以重复执行（幂等，始终从 `startedAt` 重算）。
+   */
+  val migration13to14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      val rows = ArrayList<Pair<Long, Long>>()
+      db.query("SELECT `id`, `startedAt` FROM `play_events`").use { cursor ->
+        while (cursor.moveToNext()) {
+          rows.add(cursor.getLong(0) to cursor.getLong(1))
+        }
+      }
+      if (rows.isEmpty()) return
+
+      val calendar = Calendar.getInstance()
+      val statement = db.compileStatement(
+        "UPDATE `play_events` SET `year` = ?, `month` = ?, `day` = ?, `hour` = ?, `weekday` = ? WHERE `id` = ?"
+      )
+      rows.forEach { (id, startedAt) ->
+        calendar.timeInMillis = startedAt
+        statement.clearBindings()
+        statement.bindLong(1, calendar.get(Calendar.YEAR).toLong())
+        statement.bindLong(2, (calendar.get(Calendar.MONTH) + 1).toLong())
+        statement.bindLong(3, calendar.get(Calendar.DAY_OF_MONTH).toLong())
+        statement.bindLong(4, calendar.get(Calendar.HOUR_OF_DAY).toLong())
+        statement.bindLong(5, calendar.get(Calendar.DAY_OF_WEEK).toLong())
+        statement.bindLong(6, id)
+        statement.executeUpdateDelete()
+      }
     }
   }
 }

@@ -11,7 +11,6 @@ import remix.myplayer.repo.PlayEventRepository
 import remix.myplayer.util.CanonicalIdProvider
 import remix.myplayer.util.DeviceIdProvider
 import java.util.Calendar
-import java.util.TimeZone
 import java.util.UUID
 
 /**
@@ -22,6 +21,10 @@ import java.util.UUID
  * - accumulate：仅在播放状态下，按 position 增量累计，增量异常视为 seek 忽略。
  * - end：切歌/自然结束/错误/停止/单曲循环重置时最终化。
  * - discard：有效收听比例 < 0.1（或未知时长时收听 < 1s）的会话不落库（但 song_added 已登记）。
+ *   例外：前 [SKIP_RATIO_THRESHOLD] 内被手动切歌的会话即使不达标也落库，用于跳过统计。
+ *
+ * 派生字段（year/month/day/hour/weekday）按设备本地时区计算；只有 startedAt/endedAt
+ * 是 UTC epoch 毫秒。
  */
 class PlayEventRecorder(
   private val repository: PlayEventRepository,
@@ -168,11 +171,16 @@ class PlayEventRecorder(
     } else {
       s.listenedMs >= MIN_LISTEN_MS_UNKNOWN_DURATION
     }
+    // 前 SKIP_RATIO_THRESHOLD 内手动切歌 = 跳过。这类会话本来就低于有效阈值，
+    // 若按通用规则丢弃，跳过统计永远是 0，所以单独放行。
+    val isManualSkip = endReason == PlayEventEndReason.SKIP_TO_NEXT ||
+        endReason == PlayEventEndReason.SKIP_TO_PREVIOUS
+    val isEarlySkip = isManualSkip && durationMs > 0 && ratio < SKIP_RATIO_THRESHOLD
 
     lastEventEndedAt = endedAt
-    if (!isEffective || !s.song.valid()) return
+    if ((!isEffective && !isEarlySkip) || !s.song.valid()) return
 
-    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+    val cal = Calendar.getInstance().apply {
       timeInMillis = s.startedAt
     }
     val event = PlayEvent(
@@ -219,7 +227,7 @@ class PlayEventRecorder(
 
   private fun maybeRecordSongAdded(song: Song, sessionId: String, addedAt: Long) {
     if (!enabled()) return
-    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+    val cal = Calendar.getInstance().apply {
       timeInMillis = addedAt
     }
     val event = PlayEvent(
@@ -272,6 +280,7 @@ class PlayEventRecorder(
     private const val MAX_SEEK_GAP = 2500L
     private const val LOOP_RESET_THRESHOLD = 1000L
     private const val EFFECTIVE_THRESHOLD = 0.1
+    private const val SKIP_RATIO_THRESHOLD = 0.05
     private const val COMPLETE_THRESHOLD = 0.9
     private const val MIN_LISTEN_MS_UNKNOWN_DURATION = 1000L
     private const val SESSION_GAP_MS = 30L * 60L * 1000L

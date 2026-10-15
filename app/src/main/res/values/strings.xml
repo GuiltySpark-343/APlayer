@@ -606,8 +606,6 @@
   <string name="play_stat_enabled_desc">Record play events for the annual report</string>
   <string name="confirm_clear_play_stats">Clear all listening stats?</string>
   <!-- Annual report P0 additions -->
-  <string name="stat_added_songs">New Songs</string>
-  <string name="stat_skip_rate">Skip Rate</string>
   <string name="stat_complete_rate">Completion Rate</string>
   <string name="stat_repeat">Repeat</string>
   <string name="stat_explore">Explore</string>
@@ -633,6 +631,9 @@
   <string name="stat_late_night_ratio">Late Night Share</string>
   <string name="stat_late_night_top">Late Night Top</string>
   <string name="stat_loop_top">Most Looped</string>
+  <string name="stat_skip_top">Most Skipped</string>
+  <string name="stat_skip_count">%1$d skips</string>
+  <string name="stat_plays_unit">%1$d plays</string>
   <string name="stat_genre">Genres</string>
   <string name="stat_last_year">Last</string>
   <string name="stat_this_year">This</string>
@@ -664,7 +665,6 @@
   <string name="kw_picky_ears">Picky Ears</string>
   <string name="kw_immersive">Immersive</string>
   <string name="kw_chill_listener">Chill Listener</string>
-  <string name="kw_new_chaser">Trend Chaser</string>
   <string name="kw_default">Music Traveler</string>
   <string name="poster_hours">%1$.1f h</string>
   <string name="poster_minutes">%1$d min</string>

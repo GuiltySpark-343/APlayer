@@ -272,7 +272,7 @@ class AnnualReportViewModel @Inject constructor(
         }.getOrNull() ?: return@forEach
         val startedAt = parseIso(export.startedAt) ?: return@forEach
         val endedAt = parseIso(export.endedAt) ?: startedAt
-        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = startedAt }
+        val cal = Calendar.getInstance().apply { timeInMillis = startedAt }
         result.add(
           PlayEvent(
             schemaVersion = export.schemaVersion,

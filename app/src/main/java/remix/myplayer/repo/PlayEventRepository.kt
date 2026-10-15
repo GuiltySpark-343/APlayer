@@ -5,6 +5,7 @@ import remix.myplayer.data.db.room.dao.PlayEventDao
 import remix.myplayer.data.db.room.entity.PlayEvent
 import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.data.model.report.SongMoment
+import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -63,6 +64,7 @@ class PlayEventRepoImpl @Inject constructor(
   override suspend fun eventsOf(year: Int): List<PlayEvent> = playEventDao.selectByYear(year)
 
   override suspend fun annualReport(year: Int): AnnualReport {
+    val (yearStart, yearEnd) = localYearRange(year)
     return AnnualReport(
       year = year,
       plays = playEventDao.countByYear(year),
@@ -73,8 +75,7 @@ class PlayEventRepoImpl @Inject constructor(
       distinctSongs = playEventDao.countDistinctSongs(year),
       distinctArtists = playEventDao.countDistinctArtists(year),
       distinctAlbums = playEventDao.countDistinctAlbums(year),
-      firstListenedSongs = playEventDao.countFirstListenedSongs(year),
-      addedSongs = playEventDao.countAddedSongs(year),
+      firstListenedSongs = playEventDao.countFirstListenedSongs(yearStart, yearEnd),
       skippedPlays = playEventDao.countSkipped(year),
       firstPlay = playEventDao.firstEvent(year)?.toMoment(),
       lastPlay = playEventDao.lastEvent(year)?.toMoment(),
@@ -89,6 +90,7 @@ class PlayEventRepoImpl @Inject constructor(
       loopTop = playEventDao.loopRanking(year, TOP_LIMIT),
       genreBreakdown = playEventDao.genreBreakdown(year, TOP_LIMIT),
       lateNightTopSongs = playEventDao.lateNightTopSongs(year, TOP_LIMIT),
+      skipTop = playEventDao.skipRanking(year, TOP_LIMIT),
       genreByQuarter = playEventDao.genreByQuarter(year)
     )
   }
@@ -106,6 +108,17 @@ class PlayEventRepoImpl @Inject constructor(
     album = albumSnapshot,
     at = startedAt
   )
+
+  /** 某年的本地时区区间 [start, end)，用于“当年首次收听”这类需要跨年边界的判断。 */
+  private fun localYearRange(year: Int): Pair<Long, Long> {
+    val calendar = Calendar.getInstance().apply {
+      clear()
+      set(year, Calendar.JANUARY, 1)
+    }
+    val start = calendar.timeInMillis
+    calendar.set(year + 1, Calendar.JANUARY, 1)
+    return start to calendar.timeInMillis
+  }
 
   companion object {
     private const val TOP_LIMIT = 10

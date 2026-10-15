@@ -11,7 +11,6 @@ enum class ReportKeyword(val titleRes: Int) {
   PICKY_EARS(R.string.kw_picky_ears),
   IMMERSIVE(R.string.kw_immersive),
   CHILL_LISTENER(R.string.kw_chill_listener),
-  NEW_CHASER(R.string.kw_new_chaser),
   DEFAULT(R.string.kw_default)
 }
 
@@ -67,7 +66,6 @@ object ReportStory {
     if (skipRate >= 0.4) scored.add(ReportKeyword.PICKY_EARS to skipRate)
     if (completeRate >= 0.7) scored.add(ReportKeyword.IMMERSIVE to completeRate)
     if (autoRatio >= 0.6) scored.add(ReportKeyword.CHILL_LISTENER to autoRatio)
-    if (report.addedSongs >= 100) scored.add(ReportKeyword.NEW_CHASER to report.addedSongs / 500.0)
 
     val keywords = scored.sortedByDescending { it.second }.take(2).map { it.first }
 

@@ -20,6 +20,7 @@
 - 累计：仅播放状态下按位置 100ms 递增累计 `listenedMs`；相邻位置增量 >2500ms 视为 seek 不计入；位置回退到接近开头视为单曲循环新开一轮。
 - 结束：切歌/自然结束/错误/服务停止/单曲循环重置/暂停后切歌。
 - 阈值：有效播放 `listenedMs/durationMs >= 0.1`（未知时长需 `listenedMs >= 1000ms`）；`listenRatio=min(ratio,1)`；`playScore=listenRatio`；`completed = duration>0 && (ratio>=0.9 || endReason==NATURAL_END)`。
+- 跳过例外：**手动切歌（`SKIP_TO_NEXT`/`SKIP_TO_PREVIOUS`）且 `listenRatio < 0.05`（曲目前 5%）的会话即使低于有效阈值也落库**，用于「跳过排行」。否则前 5% 就被切掉的歌会被整条丢弃，跳过统计恒为 0。
 - 每会话一条；暂停→恢复同一事件；拖动不虚增。
 
 ## 2. `source` 枚举
@@ -36,6 +37,8 @@
 
 `id`(本地主键)、`schemaVersion`(=2)、`eventId`、`deviceId`、`eventType`(`playback`/`song_added`)、`canonicalId`、`audioId?`、`startedAt/endedAt`(UTC ms)、`durationMs`、`listenedMs`、`listenRatio`、`playScore`、`completed`、`source`、`endReason`、`titleSnapshot`、`artistSnapshot`、`albumSnapshot`、`genreSnapshot?`、`sourceUri?`、`contentHash?`、`pathHint?`、`year/month/day/hour/weekday`，
 以及 v2 可选：`songId?`、`artistId?`、`albumId?`、`genreId?`、`playlistId?`、`mediaType?`、`sessionId?`、`gapBeforeMs?`、`gapAfterMs?`、`loopCount`、`outputDevice?`、`isForeground?`、`decoder?`。
+
+> `year/month/day/hour/weekday` 是**派生列，按设备本地时区**从 `startedAt` 算出（`weekday` 为 1=周日 … 7=周六）；只有 `startedAt/endedAt` 是 UTC。把派生列按 UTC 算会让时段分布/深夜统计整体偏移一个时区（Android 端 v13 迁移已按本地时区重算历史数据）。
 
 索引：`year`、`canonicalId`、`audioId`、`source`、`startedAt`、`eventType`。
 

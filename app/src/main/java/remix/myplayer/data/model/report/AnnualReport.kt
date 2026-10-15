@@ -6,6 +6,7 @@ import remix.myplayer.data.db.room.dao.GenreQuarterCount
 import remix.myplayer.data.db.room.dao.HourCount
 import remix.myplayer.data.db.room.dao.LoopItem
 import remix.myplayer.data.db.room.dao.MonthCount
+import remix.myplayer.data.db.room.dao.SkipItem
 import remix.myplayer.data.db.room.dao.SourceCount
 import remix.myplayer.data.db.room.dao.TopAlbumItem
 import remix.myplayer.data.db.room.dao.TopArtistItem
@@ -26,7 +27,6 @@ data class AnnualReport(
   val distinctArtists: Int,
   val distinctAlbums: Int,
   val firstListenedSongs: Int,
-  val addedSongs: Int,
   val skippedPlays: Int,
   val firstPlay: SongMoment?,
   val lastPlay: SongMoment?,
@@ -42,6 +42,8 @@ data class AnnualReport(
   val loopTop: List<LoopItem>,
   val genreBreakdown: List<GenreCount>,
   val lateNightTopSongs: List<TopPlayItem>,
+  /** 跳过排行：最常被手动切掉的歌曲。 */
+  val skipTop: List<SkipItem>,
   // ---- P3-6 ----
   /** 按季度的曲风分布（曲风进化史）。默认空，避免破坏其它构造点。 */
   val genreByQuarter: List<GenreQuarterCount> = emptyList()

@@ -174,6 +174,8 @@ private fun AnnualReportContent() {
         Spacer(Modifier.height(tokens.sectionGap))
         TopAlbumsCard(report)
         Spacer(Modifier.height(tokens.sectionGap))
+        SkipCard(report)
+        Spacer(Modifier.height(tokens.sectionGap))
         TrendCard(report)
         Spacer(Modifier.height(tokens.sectionGap))
         HourCard(report)
@@ -251,7 +253,6 @@ private fun MetricCard(report: AnnualReport) {
 @Composable
 private fun ExtraMetricCard(report: AnnualReport) {
   val plays = report.plays
-  val skipRate = if (plays > 0) report.skippedPlays.toDouble() / plays else 0.0
   val completeRate = if (plays > 0) report.completedPlays.toDouble() / plays else 0.0
   val repeat = if (report.distinctSongs > 0) plays.toDouble() / report.distinctSongs else 0.0
   val explore =
@@ -259,15 +260,13 @@ private fun ExtraMetricCard(report: AnnualReport) {
 
   StoryCard {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-      MetricItem(stringResource(R.string.stat_added_songs), report.addedSongs.toString())
-      MetricItem(stringResource(R.string.stat_skip_rate), formatPercent(skipRate))
       MetricItem(stringResource(R.string.stat_complete_rate), formatPercent(completeRate))
+      MetricItem(stringResource(R.string.stat_repeat), "%.2f".format(repeat))
     }
     Row(
       modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
       horizontalArrangement = Arrangement.SpaceBetween
     ) {
-      MetricItem(stringResource(R.string.stat_repeat), "%.2f".format(repeat))
       MetricItem(stringResource(R.string.stat_explore), formatPercent(explore))
       MetricItem(
         stringResource(R.string.stat_streak),
@@ -384,6 +383,43 @@ private fun TopAlbumsCard(report: AnnualReport) {
 }
 
 @Composable
+private fun SkipCard(report: AnnualReport) {
+  if (report.skipTop.isEmpty()) return
+  StoryCard(title = stringResource(R.string.stat_skip_top)) {
+    report.skipTop.take(5).forEachIndexed { index, item ->
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        TextPrimary(
+          text = (index + 1).toString(),
+          fontSize = LocalReportTokens.current.titleSize,
+          color = LocalTheme.current.secondary
+        )
+        Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+          TextPrimary(text = item.title, fontSize = LocalReportTokens.current.bodySize)
+          if (item.artist.isNotBlank()) {
+            TextSecondary(text = item.artist, fontSize = LocalReportTokens.current.captionSize)
+          }
+        }
+        Column(horizontalAlignment = Alignment.End) {
+          TextPrimary(
+            text = stringResource(R.string.stat_skip_count, item.skips),
+            fontSize = LocalReportTokens.current.bodySize
+          )
+          TextSecondary(
+            text = stringResource(R.string.stat_plays_unit, item.plays),
+            fontSize = LocalReportTokens.current.captionSize
+          )
+        }
+      }
+    }
+  }
+}
+
+@Composable
 private fun RankRow(rank: Int, title: String, subtitle: String, listenMs: Long, plays: Int) {
   val context = LocalContext.current
   Row(
@@ -400,8 +436,11 @@ private fun RankRow(rank: Int, title: String, subtitle: String, listenMs: Long, 
       }
     }
     Column(horizontalAlignment = Alignment.End) {
-      TextPrimary(text = formatTime(context, listenMs), fontSize = LocalReportTokens.current.bodySize)
-      TextSecondary(text = plays.toString() + " x", fontSize = LocalReportTokens.current.captionSize)
+      TextPrimary(
+        text = stringResource(R.string.stat_plays_unit, plays),
+        fontSize = LocalReportTokens.current.bodySize
+      )
+      TextSecondary(text = formatTime(context, listenMs), fontSize = LocalReportTokens.current.captionSize)
     }
   }
 }

@@ -588,8 +588,6 @@
   <string name="play_stat_enabled_desc">记录播放事件以生成年度报告</string>
   <string name="confirm_clear_play_stats">确定清除所有播放统计数据？</string>
   <!-- 年度报告 P0 补充 -->
-  <string name="stat_added_songs">新增歌曲</string>
-  <string name="stat_skip_rate">跳过率</string>
   <string name="stat_complete_rate">完整率</string>
   <string name="stat_repeat">重复度</string>
   <string name="stat_explore">探索度</string>
@@ -615,6 +613,9 @@
   <string name="stat_late_night_ratio">深夜占比</string>
   <string name="stat_late_night_top">深夜最常听</string>
   <string name="stat_loop_top">单曲循环王</string>
+  <string name="stat_skip_top">跳过排行</string>
+  <string name="stat_skip_count">%1$d 次跳过</string>
+  <string name="stat_plays_unit">%1$d 次</string>
   <string name="stat_genre">流派分布</string>
   <string name="stat_last_year">去年</string>
   <string name="stat_this_year">今年</string>
@@ -646,7 +647,6 @@
   <string name="kw_picky_ears">挑剔的耳朵</string>
   <string name="kw_immersive">沉浸式聆听</string>
   <string name="kw_chill_listener">佛系听众</string>
-  <string name="kw_new_chaser">追新族</string>
   <string name="kw_default">音乐旅人</string>
   <string name="poster_hours">%1$.1f 小时</string>
   <string name="poster_minutes">%1$d 分钟</string>

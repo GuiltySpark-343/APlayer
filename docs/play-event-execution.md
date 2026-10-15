@@ -75,7 +75,8 @@ data class PlayEvent(
 - 会话开始：歌曲开始播放（`onIsPlayingChanged(true)`）时，若当前歌曲与上次不同则新建会话。
 - 会话累计：在 `onPositionChange`（每 100ms）且正在播放时累加 `position` 增量；增量异常（>2500ms 或 <0）视为 seek，不累计，避免拖动虚增。
 - 会话结束：切歌/自然结束/错误/暂停后切歌/服务停止时最终化。
-- 丢弃：`listenedMs / durationMs < 0.1` 不落库。
+- 丢弃：`listenedMs / durationMs < 0.1` 不落库；例外是前 5% 内的手动切歌（见下）。
+- 跳过：`endReason` 为 `SKIP_TO_NEXT`/`SKIP_TO_PREVIOUS` 且 `listenRatio < 0.05` 时即使不达有效阈值也落库，供「跳过排行」使用。
 - 完整：`ratio >= 0.9` 或自然结束 → `completed = true`。
 - `playScore = min(ratio, 1.0)`。
 

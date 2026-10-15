@@ -10,6 +10,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import remix.myplayer.data.db.DbMigrations.migration10to11
 import remix.myplayer.data.db.DbMigrations.migration11to12
+import remix.myplayer.data.db.DbMigrations.migration12to13
+import remix.myplayer.data.db.DbMigrations.migration13to14
 import remix.myplayer.data.db.DbMigrations.migration3to4
 import remix.myplayer.data.db.DbMigrations.migration4to5
 import remix.myplayer.data.db.DbMigrations.migration5to6
@@ -78,7 +80,7 @@ abstract class AppDatabase : RoomDatabase() {
 
   companion object {
 
-    const val VERSION = 12
+    const val VERSION = 14
 
     @Volatile
     private var INSTANCE: AppDatabase? = null
@@ -108,6 +110,8 @@ abstract class AppDatabase : RoomDatabase() {
           .addMigrations(migration9to10)
           .addMigrations(migration10to11)
           .addMigrations(migration11to12)
+          .addMigrations(migration12to13)
+          .addMigrations(migration13to14)
           .build()
       database.invalidationTracker.addObserver(object :
         InvalidationTracker.Observer(PlayList.TABLE_NAME, PlayQueue.TABLE_NAME) {

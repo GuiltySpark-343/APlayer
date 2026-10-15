@@ -56,7 +56,8 @@ interface PlayEventDao {
   @Query("SELECT COUNT(DISTINCT albumSnapshot) FROM play_events WHERE eventType = 'playback' AND year = :year")
   suspend fun countDistinctAlbums(year: Int): Int
 
-  // 当年首次收听的歌曲数（该歌曲最早一次播放发生在该年）
+  // 当年首次收听的歌曲数（该歌曲最早一次播放落在 [startMs, endMs) 内）。
+  // 年边界由仓库用本地时区算好传进来，不用 SQL 的 'localtime'——平台 SQLite 的时区处理不可靠。
   @Query(
     """
     SELECT COUNT(*) FROM (
@@ -64,22 +65,20 @@ interface PlayEventDao {
       FROM play_events
       WHERE eventType = 'playback'
       GROUP BY canonicalId
-      HAVING CAST(strftime('%Y', firstAt / 1000, 'unixepoch') AS INTEGER) = :year
+      HAVING firstAt >= :startMs AND firstAt < :endMs
     )
     """
   )
-  suspend fun countFirstListenedSongs(year: Int): Int
+  suspend fun countFirstListenedSongs(startMs: Long, endMs: Long): Int
 
-  // 当年新增歌曲数（song_added 且 year = 该年）
-  @Query("SELECT COUNT(*) FROM play_events WHERE eventType = 'song_added' AND year = :year")
-  suspend fun countAddedSongs(year: Int): Int
-
-  // 主动跳过次数
+  // 跳过次数：手动切歌（下一首/上一首）且发生在曲目前 5% 以内
+  // 0.05 必须与 PlayEventRecorder.SKIP_RATIO_THRESHOLD 一致
   @Query(
     """
     SELECT COUNT(*) FROM play_events
     WHERE eventType = 'playback' AND year = :year
       AND endReason IN ('SKIP_TO_NEXT', 'SKIP_TO_PREVIOUS')
+      AND listenRatio < 0.05
     """
   )
   suspend fun countSkipped(year: Int): Int
@@ -104,7 +103,7 @@ interface PlayEventDao {
     FROM play_events e1
     WHERE e1.eventType = 'playback' AND e1.year = :year
     GROUP BY canonicalId
-    ORDER BY listenedMs DESC
+    ORDER BY plays DESC, listenedMs DESC
     LIMIT :limit
     """
   )
@@ -119,7 +118,7 @@ interface PlayEventDao {
     FROM play_events
     WHERE eventType = 'playback' AND year = :year
     GROUP BY artistSnapshot
-    ORDER BY listenedMs DESC
+    ORDER BY plays DESC, listenedMs DESC
     LIMIT :limit
     """
   )
@@ -134,7 +133,7 @@ interface PlayEventDao {
     FROM play_events
     WHERE eventType = 'playback' AND year = :year
     GROUP BY albumSnapshot
-    ORDER BY listenedMs DESC
+    ORDER BY plays DESC, listenedMs DESC
     LIMIT :limit
     """
   )
@@ -216,6 +215,27 @@ interface PlayEventDao {
   )
   suspend fun loopRanking(year: Int, limit: Int): List<LoopItem>
 
+  // 跳过排行：前 5% 内被手动切掉的歌曲，按跳过次数降序；同次数时播放次数少的排前面
+  @Query(
+    """
+    SELECT canonicalId AS canonicalId,
+      MAX(audioId) AS audioId,
+      (SELECT titleSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS title,
+      (SELECT artistSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS artist,
+      (SELECT albumSnapshot FROM play_events e2 WHERE e2.canonicalId = e1.canonicalId AND e2.eventType = 'playback' AND e2.year = :year ORDER BY e2.startedAt DESC LIMIT 1) AS album,
+      COUNT(*) AS skips,
+      (SELECT COUNT(*) FROM play_events e3 WHERE e3.canonicalId = e1.canonicalId AND e3.eventType = 'playback' AND e3.year = :year) AS plays
+    FROM play_events e1
+    WHERE e1.eventType = 'playback' AND e1.year = :year
+      AND e1.endReason IN ('SKIP_TO_NEXT', 'SKIP_TO_PREVIOUS')
+      AND e1.listenRatio < 0.05
+    GROUP BY canonicalId
+    ORDER BY skips DESC, plays ASC
+    LIMIT :limit
+    """
+  )
+  suspend fun skipRanking(year: Int, limit: Int): List<SkipItem>
+
   // P1：流派占比
   @Query(
     """
@@ -244,7 +264,7 @@ interface PlayEventDao {
     FROM play_events e1
     WHERE e1.eventType = 'playback' AND e1.year = :year AND e1.hour BETWEEN 0 AND 5
     GROUP BY canonicalId
-    ORDER BY listenedMs DESC
+    ORDER BY plays DESC, listenedMs DESC
     LIMIT :limit
     """
   )
@@ -337,6 +357,16 @@ data class GenreCount(
   val genre: String,
   val plays: Int,
   val listenedMs: Long
+)
+
+data class SkipItem(
+  val canonicalId: String,
+  val audioId: Long?,
+  val title: String,
+  val artist: String,
+  val album: String,
+  val skips: Int,
+  val plays: Int
 )
 
 data class SourceCount(
