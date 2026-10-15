@@ -61,8 +61,35 @@ sha256:dcd59954…  mood.arousal  4.0   user  deleted=0
 | #2 面板「更多/新建」入口 | ✅ **已验证** | 「更多标签」渲染于 y≈2298（**此前缺失是因为手机装的是旧包**，非代码问题） |
 | #3 选中情绪 chip 显示坐标 | ✅ **已验证** | 「开心 **5/4**」「治愈 **4/2**」，与 `MOOD_PRESETS` 一致 |
 
-**撤销行（3 秒）**：初次实现放在面板**底部**，实测在 2400px 高屏上**被裁切不可见** → 已改为放在面板**顶部**（提示语下方，带底色高亮）
-→ ⏳ **该行渲染仍未点验**：两次尝试时设备分别被微信、便签占用（用户正在使用手机），已停止盲点。
+**撤销行（3 秒）**：初次实现放在面板**底部**，实测在 2400px 高屏上**被裁切不可见** → 已改为放在面板**顶部**（提示语下方，带底色高亮）。
+
+### ✅ 撤销（完整链路，已端到端验证）
+
+- **渲染**：点情绪词后，面板顶部出现「已打上「温柔」」+「撤销」（y≈828）
+- **动作**：链式执行「点『燃』→ 1s → 点『撤销』」后查库：
+```
+sha256:d71bbb43…  mood.burn     deleted=1    ← 点击写入，撤销后墓碑
+sha256:d71bbb43…  mood.valence  score=3.0  deleted=1
+sha256:d71bbb43…  mood.arousal  score=5.0  deleted=1
+```
+`(3,5)` 与 `MOOD_PRESETS["mood.burn"]` 完全一致 —— **一键写入 + 撤销回滚全链路正确**。
+
+### 🐞 线上 Bug：装过期包导致「App 启动即崩」（已定位并修复）
+
+**现象**：App 完全无法使用，启动后进程立刻消失，桌面停留。
+
+**根因**（crash buffer 实证）：
+```
+java.lang.IllegalStateException: A migration from 14 to 13 was required but not found
+```
+设备数据库已被展示层升到 **v14**，而本线旧 worktree 的构建仍是 **v13** → Room 触发**降级**迁移 → 无降级路径 → 启动崩溃。
+
+**修复**：改用**合并后的最新分支**（`dev/play-event`，`AppDatabase.VERSION = 14`，且 **`migration12to13`（标签表）与 `migration13to14`（展示层）并存**）重新构建安装 → 进程存活、前台正常、crash buffer 全空。
+
+**防复发**：
+1. 本线的独立 worktree `S:\Workplace\APlayer-tags` **已退役**（其提交全部并入 `dev/play-event`，无遗留）；
+2. **纪律**：任何情况下**只从最新分支构建安装**；跨分支/跨工作区混装会造成 DB 版本错配。
+3. 判定设备上装的是谁的包：`pm path` + `pull` + `aapt2 dump xmltree --file AndroidManifest.xml` 看 host 列表；DB 版本可用 `run-as` 拉库后看 `PRAGMA user_version`。
 
 > **设备占用告警（两次踩到）**：`ui_nodes.py` 输出里的 package 若不是 `remix.myplayer.debug`，
 > **立即停止一切 `input tap`** —— 盲点会落进用户正在用的 App（实测落进微信、便签）。
