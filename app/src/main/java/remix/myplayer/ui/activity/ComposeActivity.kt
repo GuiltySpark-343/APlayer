@@ -30,10 +30,12 @@ import remix.myplayer.ui.nav.PendingRoute
 import remix.myplayer.ui.nav.RouteAnnualReport
 import remix.myplayer.ui.nav.RouteAnnualReportStory
 import remix.myplayer.ui.nav.RouteSongTags
+import remix.myplayer.ui.nav.RouteTagFilter
 import remix.myplayer.ui.nav.annualReportDeepLink
 import remix.myplayer.ui.nav.annualReportStoryDeepLink
 import remix.myplayer.ui.nav.playingScreenDeepLink
 import remix.myplayer.ui.nav.songTagsDeepLink
+import remix.myplayer.ui.nav.tagFilterDeepLink
 import remix.myplayer.ui.theme.APlayerTheme
 import remix.myplayer.ui.theme.LocalTheme
 import remix.myplayer.ui.theme.LocalThemeController
@@ -130,6 +132,8 @@ class ComposeActivity : BaseMusicActivity() {
           PendingRoute.request(RouteAnnualReportStory)
 
         it.host == songTagsDeepLink.host -> PendingRoute.request(RouteSongTags)
+
+        it.host == tagFilterDeepLink.host -> PendingRoute.request(RouteTagFilter)
 
         it.scheme == playingScreenDeepLink.scheme -> {
           Timber.v("deepLink")

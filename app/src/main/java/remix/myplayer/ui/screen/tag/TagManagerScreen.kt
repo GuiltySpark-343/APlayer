@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import remix.myplayer.R
 import remix.myplayer.data.db.room.entity.TagDef
+import remix.myplayer.ui.nav.LocalNavController
+import remix.myplayer.ui.nav.RouteTagFilter
 import remix.myplayer.ui.theme.LocalTheme
 import remix.myplayer.ui.widget.common.CommonAppBar
 import remix.myplayer.ui.widget.common.TextPrimary
@@ -71,6 +73,15 @@ fun TagManagerScreen() {
       CommonAppBar(
         title = stringResource(R.string.song_tags),
         actions = {
+          val nav = LocalNavController.current
+          Text(
+            text = stringResource(R.string.tag_filter),
+            color = Color.White,
+            fontSize = 14.sp,
+            modifier = Modifier
+              .padding(end = 16.dp)
+              .clickable { nav.navigate(RouteTagFilter) }
+          )
           Text(
             text = "+",
             color = Color.White,

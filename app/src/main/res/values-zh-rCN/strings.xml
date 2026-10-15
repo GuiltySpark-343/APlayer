@@ -685,4 +685,6 @@
   <string name="tag_arousal">唤醒强度</string>
   <string name="tag_more">更多标签</string>
   <string name="tag_empty">还没有标签，点右上角 + 新建一个吧</string>
+  <string name="tag_matched">匹配 %1$d 首 / 共 %2$d 首</string>
+  <string name="tag_filter_empty">选择上方标签来筛选歌曲</string>
 </resources>

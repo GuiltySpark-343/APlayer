@@ -703,4 +703,6 @@
   <string name="tag_arousal">Arousal</string>
   <string name="tag_more">More Tags</string>
   <string name="tag_empty">No tags yet. Tap + to create one.</string>
+  <string name="tag_matched">%1$d of %2$d songs</string>
+  <string name="tag_filter_empty">Pick tags above to filter songs</string>
 </resources>
