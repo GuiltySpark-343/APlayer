@@ -18,6 +18,7 @@ import remix.myplayer.helper.EQHelper
 import remix.myplayer.ui.nav.LocalNavController
 import remix.myplayer.ui.nav.RouteAbout
 import remix.myplayer.ui.nav.RouteAnnualReportStory
+import remix.myplayer.ui.nav.RouteSongTags
 import remix.myplayer.ui.nav.RouteEq
 import remix.myplayer.ui.nav.RouteSettingDetail
 import remix.myplayer.ui.screen.setting.logic.color.BlackThemeLogic
@@ -77,6 +78,10 @@ fun SettingScreen() {
 
         ArrowPreference(R.string.annual_report) {
           nav.navigate(RouteAnnualReportStory)
+        }
+
+        ArrowPreference(R.string.song_tags) {
+          nav.navigate(RouteSongTags)
         }
 
         SettingCategory.entries.forEach { category ->

@@ -61,11 +61,15 @@ $adb = "D:/Application2/Android/Sdk/platform-tools/adb.exe"
 把设备上的真实数据库拉回本地，用 Python 断言结构与数据**幂等**：
 
 ```powershell
+# 注意：**不要**用 PowerShell 的 `>` 重定向接 adb 二进制输出（会按文本处理导致文件损坏，
+# 表现为 sqlite3 "file is not a database"）。必须用 Start-Process -RedirectStandardOutput。
 $adb = "D:/Application2/Android/Sdk/platform-tools/adb.exe"
 $tmp = "$env:TEMP\tagsdb"; New-Item -ItemType Directory -Force -Path $tmp | Out-Null
-& $adb exec-out run-as remix.myplayer.debug cat databases/aplayer.db      > "$tmp\aplayer.db"
-& $adb exec-out run-as remix.myplayer.debug cat databases/aplayer.db-wal  > "$tmp\aplayer.db-wal"
-& $adb exec-out run-as remix.myplayer.debug cat databases/aplayer.db-shm  > "$tmp\aplayer.db-shm"
+Remove-Item "$tmp\*" -Force -ErrorAction SilentlyContinue
+foreach ($f in @('aplayer.db','aplayer.db-wal','aplayer.db-shm')) {
+  Start-Process -FilePath $adb -ArgumentList @('exec-out','run-as','remix.myplayer.debug','cat',"databases/$f") `
+    -RedirectStandardOutput "$tmp\$f" -NoNewWindow -Wait
+}
 python tools/assert_tags_db.py "$tmp\aplayer.db"     # 见 T0.1 交付物
 ```
 

@@ -681,4 +681,26 @@
   <string name="chart_legend_less">Less</string>
   <string name="chart_legend_more">More</string>
   <string name="chart_quarter">Q%1$d</string>
+
+  <!-- Song tag system T0 -->
+  <string name="song_tags">Song Tags</string>
+  <string name="tag_category_objective">Objective</string>
+  <string name="tag_category_mood">Mood</string>
+  <string name="tag_category_context">Context</string>
+  <string name="tag_new">New Tag</string>
+  <string name="tag_rename">Rename</string>
+  <string name="tag_change_color">Change Color</string>
+  <string name="tag_merge">Merge Into</string>
+  <string name="tag_delete">Delete</string>
+  <string name="tag_delete_confirm">This affects %1$d songs. Continue?</string>
+  <string name="tag_merged_toast">Merged into %1$s</string>
+  <string name="tag_added_toast">Tagged %1$s</string>
+  <string name="tag_undo">Undo</string>
+  <string name="tag_filter">Filter by Tag</string>
+  <string name="tag_play_all">Play All</string>
+  <string name="tag_score_hint">Tap to rate, tap again to fine-tune</string>
+  <string name="tag_valence">Valence</string>
+  <string name="tag_arousal">Arousal</string>
+  <string name="tag_more">More Tags</string>
+  <string name="tag_empty">No tags yet. Tap + to create one.</string>
 </resources>
