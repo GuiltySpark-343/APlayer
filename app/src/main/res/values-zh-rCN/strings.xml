@@ -687,4 +687,5 @@
   <string name="tag_empty">还没有标签，点右上角 + 新建一个吧</string>
   <string name="tag_matched">匹配 %1$d 首 / 共 %2$d 首</string>
   <string name="tag_filter_empty">选择上方标签来筛选歌曲</string>
+  <string name="tag_fine_tune">情绪微调</string>
 </resources>

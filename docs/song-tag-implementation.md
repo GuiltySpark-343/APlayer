@@ -47,6 +47,18 @@ $adb = "D:/Application2/Android/Sdk/platform-tools/adb.exe"
 **装不上时**（`INSTALL_FAILED_ABORTED: User rejected permissions`）：手机**解锁并亮屏**后重试；仍失败则
 `adb push <apk> /sdcard/Download/` 让用户手动安装。
 
+> ⚠️ **共用设备的安装冲突（实测踩到）**：本工作区与展示层工作区**共用同一台手机、同一个包名** `remix.myplayer.debug`，
+> 谁后安装谁覆盖。已实测到「本线的 build 被展示层的 build 覆盖」，表现为 deep link 解析失败
+> （`am start` 报 `unable to resolve Intent ... aplayer://song_tags`）。
+>
+> **判定当前装的是谁的包**（唯一可靠办法，看 manifest 里的 host）：
+> ```powershell
+> $p = (& $adb shell pm path remix.myplayer.debug) -replace 'package:',''
+> & $adb pull $p.Trim() "$env:TEMP\installed.apk"
+> & 'D:/Application2/Android/Sdk/build-tools/35.0.0/aapt2.exe' dump xmltree --file AndroidManifest.xml "$env:TEMP\installed.apk" | Select-String 'android:host'
+> ```
+> 验证本线功能前，必须先确认 host 列表包含 `song_tags`；否则先装本线的包。
+
 ### 0.3 验证协议（本实施包的核心验收手段）
 
 #### 0.3.1 图像能力说明（重要）

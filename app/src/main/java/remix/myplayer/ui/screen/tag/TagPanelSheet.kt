@@ -131,7 +131,7 @@ fun TagPanelSheet(
 
             if (showScores) {
               TextPrimary(
-                text = stringResource(R.string.tag_more),
+                text = stringResource(R.string.tag_fine_tune),
                 fontSize = 13.sp,
                 color = LocalTheme.current.primary,
                 modifier = Modifier.padding(top = 14.dp, bottom = 6.dp)
