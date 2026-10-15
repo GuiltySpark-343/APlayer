@@ -11,6 +11,10 @@
 | T0.3 仓库层 + DI | ✅ | `b345b768` | ✅ | ✅ 真机断言通过（表就位） | `SongTagRepository` + `SongTagRepoImpl` + Hilt 绑定；CRUD 交互在 T0.5 一并验证 |
 | T0.4 标签管理页 | 🟡 代码完成 | 见下 | ✅ 35s | ⏳ 真机截图待做 | 分组列表/新建/改名/改色/合并/删除 |
 | T0.7 入口与路由 | 🟡 代码完成 | 见下 | ✅ 28s | ⏳ deep link 待验证 | 最小 patch：AppNav/Manifest/ComposeActivity/SettingScreen |
+| T0.5 一键打标面板 | 🟡 代码完成 | 见下 | ✅ 26s | ⏳ 需人工交互验证 | 播放页 ⋮ → 歌曲标签；情绪词点一下=打分；已有分可 5 档微调；3 秒撤销 |
+| T0.6 曲库标签筛选 | ⬜ 未开始 | — | — | — | 下一步 |
+
+**T0.5 设计要点（对照设计文档 §4.6）**：情绪词 chip 点击即写「该词 + valence/arousal 预设坐标」；两个情绪维度以 SCALE 标签暴露在面板底部做 5 档微调；未打分维度不落库；面板不中断播放。
 
 **迁移回归证据（真机）**：`play_events` **2318 行**、`album_colors` 0 行、`report_overrides` 0 行 —— 迁移未触碰既有数据。
 **拉库方法**：PowerShell `>` 重定向会损坏二进制，必须用 `Start-Process -RedirectStandardOutput`（实施包 0.3.2 已修正）。
