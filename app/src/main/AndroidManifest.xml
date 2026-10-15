@@ -98,6 +98,8 @@
         <data android:scheme="aplayer" android:host="playing_screen" />
         <data android:scheme="aplayer" android:host="annual_report" />
         <data android:scheme="aplayer" android:host="annual_report_story" />
+        <data android:scheme="aplayer" android:host="song_tags" />
+        <data android:scheme="aplayer" android:host="tag_filter" />
       </intent-filter>
     </activity>
 

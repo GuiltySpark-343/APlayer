@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import remix.myplayer.data.db.room.entity.WebDav
+import remix.myplayer.data.model.tag.TagSeeds
 import java.util.Calendar
 
 internal object DbMigrations {
@@ -126,11 +127,42 @@ internal object DbMigrations {
   }
 
   /**
-   * v12 之前 `year/month/day/hour/weekday` 是按 UTC 派生的（`startedAt/endedAt` 一直是正确的 UTC 毫秒）。
-   * 这一版只把数据库版本推到 13；实际回填见 [migration13to14]。
+   * 歌曲标签系统（T0）：纯新增两张表，不触碰既有表。
+   *
+   * DDL 必须与 Room 由实体生成的 schema 完全一致（见 app/schemas/.../13.json），
+   * 否则 Room 的 schema 校验会在运行时抛异常。
    */
   val migration12to13 = object : Migration(12, 13) {
     override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL(
+        "CREATE TABLE IF NOT EXISTS `tags` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tagId` TEXT NOT NULL, `name` TEXT NOT NULL, `alias` TEXT, `category` TEXT NOT NULL, `kind` TEXT NOT NULL, `colorArgb` INTEGER, `sortOrder` INTEGER NOT NULL, `isPreset` INTEGER NOT NULL, `aliasOf` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)"
+      )
+      db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_tags_tagId` ON `tags` (`tagId`)")
+      db.execSQL("CREATE INDEX IF NOT EXISTS `index_tags_category_sortOrder` ON `tags` (`category`, `sortOrder`)")
+
+      db.execSQL(
+        "CREATE TABLE IF NOT EXISTS `song_tags` (`canonicalId` TEXT NOT NULL, `tagId` TEXT NOT NULL, `score` REAL, `source` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, `deleted` INTEGER NOT NULL, PRIMARY KEY(`canonicalId`, `tagId`))"
+      )
+      db.execSQL("CREATE INDEX IF NOT EXISTS `index_song_tags_tagId` ON `song_tags` (`tagId`)")
+      db.execSQL("CREATE INDEX IF NOT EXISTS `index_song_tags_canonicalId` ON `song_tags` (`canonicalId`)")
+
+      // 预设词表（幂等：INSERT OR IGNORE，重复执行不产生重复行）
+      TagSeeds.PRESET_TAGS.forEach { seed ->
+        db.execSQL(
+          "INSERT OR IGNORE INTO `tags` (`tagId`, `name`, `alias`, `category`, `kind`, `colorArgb`, `sortOrder`, `isPreset`, `aliasOf`, `createdAt`, `updatedAt`) VALUES (?, ?, ?, ?, ?, ?, ?, 1, NULL, ?, ?)",
+          arrayOf(
+            seed.tagId,
+            seed.name,
+            seed.alias,
+            seed.category,
+            seed.kind,
+            seed.colorArgb,
+            seed.sortOrder,
+            TagSeeds.CREATED_AT,
+            TagSeeds.CREATED_AT
+          )
+        )
+      }
     }
   }
 

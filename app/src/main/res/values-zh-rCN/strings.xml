@@ -663,4 +663,29 @@
   <string name="chart_legend_less">少</string>
   <string name="chart_legend_more">多</string>
   <string name="chart_quarter">第%1$d季度</string>
+
+  <!-- 歌曲标签系统 T0 -->
+  <string name="song_tags">歌曲标签</string>
+  <string name="tag_category_objective">客观</string>
+  <string name="tag_category_mood">情绪</string>
+  <string name="tag_category_context">情境</string>
+  <string name="tag_new">新建标签</string>
+  <string name="tag_rename">重命名</string>
+  <string name="tag_change_color">改颜色</string>
+  <string name="tag_merge">合并同义词</string>
+  <string name="tag_delete">删除</string>
+  <string name="tag_delete_confirm">删除后会影响 %1$d 首歌，确定？</string>
+  <string name="tag_merged_toast">已合并到「%1$s」</string>
+  <string name="tag_added_toast">已打上「%1$s」</string>
+  <string name="tag_undo">撤销</string>
+  <string name="tag_filter">按标签筛选</string>
+  <string name="tag_play_all">播放全部</string>
+  <string name="tag_score_hint">点一下即打分，再点可微调</string>
+  <string name="tag_valence">情绪正负</string>
+  <string name="tag_arousal">唤醒强度</string>
+  <string name="tag_more">更多标签</string>
+  <string name="tag_empty">还没有标签，点右上角 + 新建一个吧</string>
+  <string name="tag_matched">匹配 %1$d 首 / 共 %2$d 首</string>
+  <string name="tag_filter_empty">选择上方标签来筛选歌曲</string>
+  <string name="tag_fine_tune">情绪微调</string>
 </resources>

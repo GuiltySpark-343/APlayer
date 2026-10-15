@@ -46,10 +46,13 @@ import remix.myplayer.ui.nav.LocalNavController
 import remix.myplayer.ui.nav.MessageNotifier
 import remix.myplayer.ui.nav.RouteEq
 import remix.myplayer.ui.nav.RouteTagEdit
+import remix.myplayer.ui.screen.tag.TagPanelSheet
 import remix.myplayer.ui.theme.LocalTheme
 import remix.myplayer.util.Util.sendLocalBroadcast
+import remix.myplayer.util.ext.activityViewModel
 import remix.myplayer.util.ext.ShowLyricTipDialog
 import remix.myplayer.viewmodel.PlayingScreenValue
+import remix.myplayer.viewmodel.TagPanelViewModel
 import remix.myplayer.viewmodel.libraryViewModel
 import remix.myplayer.viewmodel.mainViewModel
 import remix.myplayer.viewmodel.settingViewModel
@@ -72,11 +75,15 @@ fun PlayingDropDownMenu(
   val tagEditVM = tagEditViewModel
   val settingState by settingVM.settingsState.collectAsStateWithLifecycle()
 
+  val tagPanelVM: TagPanelViewModel = activityViewModel()
+  val tagPanelState by tagPanelVM.state.collectAsStateWithLifecycle()
+
   val menuItems =
     listOf(
       R.string.song_edit,
       R.string.song_detail,
       R.string.collect,
+      R.string.song_tags,
       R.string.add_to_playlist,
       R.string.sleep_timer,
       R.string.eq,
@@ -208,6 +215,10 @@ fun PlayingDropDownMenu(
               libraryVM.addSongsToPlayList(listOf(song.id), favorite.name)
             }
 
+            R.string.song_tags -> {
+              tagPanelVM.open(song)
+            }
+
             R.string.sleep_timer -> {
               timerVM.showTimerDialog()
             }
@@ -243,6 +254,15 @@ fun PlayingDropDownMenu(
       )
     }
   }
+
+  TagPanelSheet(
+    state = tagPanelState,
+    onToggle = tagPanelVM::toggle,
+    onScore = tagPanelVM::setScore,
+    onUndo = tagPanelVM::undoLast,
+    onClearUndo = tagPanelVM::clearUndo,
+    onDismiss = tagPanelVM::dismiss
+  )
 }
 
 @Composable
