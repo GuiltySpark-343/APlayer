@@ -10,6 +10,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import remix.myplayer.data.db.DbMigrations.migration10to11
 import remix.myplayer.data.db.DbMigrations.migration11to12
+import remix.myplayer.data.db.DbMigrations.migration12to13
 import remix.myplayer.data.db.DbMigrations.migration3to4
 import remix.myplayer.data.db.DbMigrations.migration4to5
 import remix.myplayer.data.db.DbMigrations.migration5to6
@@ -25,6 +26,7 @@ import remix.myplayer.data.db.room.dao.PlayListDao
 import remix.myplayer.data.db.room.dao.PlayQueueDao
 import remix.myplayer.data.db.room.dao.ReportOverrideDao
 import remix.myplayer.data.db.room.dao.SmbDao
+import remix.myplayer.data.db.room.dao.TagDao
 import remix.myplayer.data.db.room.dao.WebDavDao
 import remix.myplayer.data.db.room.entity.AlbumColor
 import remix.myplayer.data.db.room.entity.History
@@ -34,6 +36,8 @@ import remix.myplayer.data.db.room.entity.PlayList
 import remix.myplayer.data.db.room.entity.PlayQueue
 import remix.myplayer.data.db.room.entity.ReportOverride
 import remix.myplayer.data.db.room.entity.Smb
+import remix.myplayer.data.db.room.entity.SongTag
+import remix.myplayer.data.db.room.entity.TagDef
 import remix.myplayer.data.db.room.entity.WebDav
 import remix.myplayer.service.MusicService
 import remix.myplayer.ui.activity.base.BaseMusicActivity.Companion.EXTRA_PLAYLIST
@@ -53,7 +57,9 @@ import timber.log.Timber
     MetaDataCache::class,
     PlayEvent::class,
     AlbumColor::class,
-    ReportOverride::class
+    ReportOverride::class,
+    TagDef::class,
+    SongTag::class
   ], version = AppDatabase.VERSION, exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -76,9 +82,11 @@ abstract class AppDatabase : RoomDatabase() {
 
   abstract fun reportOverrideDao(): ReportOverrideDao
 
+  abstract fun tagDao(): TagDao
+
   companion object {
 
-    const val VERSION = 12
+    const val VERSION = 13
 
     @Volatile
     private var INSTANCE: AppDatabase? = null
@@ -108,6 +116,7 @@ abstract class AppDatabase : RoomDatabase() {
           .addMigrations(migration9to10)
           .addMigrations(migration10to11)
           .addMigrations(migration11to12)
+          .addMigrations(migration12to13)
           .build()
       database.invalidationTracker.addObserver(object :
         InvalidationTracker.Observer(PlayList.TABLE_NAME, PlayQueue.TABLE_NAME) {

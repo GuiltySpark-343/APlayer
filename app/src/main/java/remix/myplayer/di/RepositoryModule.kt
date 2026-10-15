@@ -23,6 +23,8 @@ import remix.myplayer.repo.PlayQueueRepository
 import remix.myplayer.repo.SmbRepoImpl
 import remix.myplayer.repo.SmbRepository
 import remix.myplayer.repo.SongRepoImpl
+import remix.myplayer.repo.SongTagRepoImpl
+import remix.myplayer.repo.SongTagRepository
 import remix.myplayer.repo.SongRepository
 import remix.myplayer.repo.WebDavRepository
 import javax.inject.Singleton
@@ -33,6 +35,10 @@ abstract class RepositoryModule {
   @Singleton
   @Binds
   abstract fun bindSongRepo(repo: SongRepoImpl): SongRepository
+
+  @Singleton
+  @Binds
+  abstract fun bindSongTagRepo(repo: SongTagRepoImpl): SongTagRepository
 
   @Singleton
   @Binds

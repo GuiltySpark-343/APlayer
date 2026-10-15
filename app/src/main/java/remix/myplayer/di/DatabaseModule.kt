@@ -14,6 +14,7 @@ import remix.myplayer.data.db.room.dao.PlayEventDao
 import remix.myplayer.data.db.room.dao.PlayListDao
 import remix.myplayer.data.db.room.dao.PlayQueueDao
 import remix.myplayer.data.db.room.dao.ReportOverrideDao
+import remix.myplayer.data.db.room.dao.TagDao
 import remix.myplayer.data.db.room.dao.WebDavDao
 import javax.inject.Singleton
 
@@ -65,6 +66,11 @@ object DatabaseModule {
   @Provides
   fun provideReportOverrideDao(database: AppDatabase): ReportOverrideDao {
     return database.reportOverrideDao()
+  }
+
+  @Provides
+  fun provideTagDao(database: AppDatabase): TagDao {
+    return database.tagDao()
   }
 
   @Provides
