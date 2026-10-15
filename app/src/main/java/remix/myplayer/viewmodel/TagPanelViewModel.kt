@@ -33,6 +33,7 @@ class TagPanelViewModel @Inject constructor(
     val groups: List<Pair<String, List<TagDef>>> = emptyList(),
     val selected: Set<String> = emptySet(),
     val scores: Map<String, Double> = emptyMap(),
+    val usage: Map<String, Int> = emptyMap(),
     val lastTagName: String? = null,
     val lastActionTagIds: List<String> = emptyList()
   )
@@ -105,6 +106,7 @@ class TagPanelViewModel @Inject constructor(
 
   private suspend fun load(canonicalId: String) {
     val tags = songTagRepository.allTags()
+    val usage = songTagRepository.usageCounts()
     val rows = songTagRepository.tagsOf(canonicalId)
     val groups = listOf(
       TagDef.CATEGORY_CONTEXT,
@@ -115,6 +117,7 @@ class TagPanelViewModel @Inject constructor(
     _state.value = _state.value.copy(
       loading = false,
       groups = groups,
+      usage = usage,
       selected = rows.map { it.tagId }.toSet(),
       scores = rows.mapNotNull { row -> row.score?.let { row.tagId to it } }.toMap()
     )

@@ -63,6 +63,26 @@ class TagManagerViewModel @Inject constructor(
     }
   }
 
+  /** 排序：与同类别中相邻标签交换 sortOrder。 */
+  fun moveTag(tagId: String, up: Boolean) {
+    viewModelScope.launch {
+      val all = _state.value.all
+      val current = all.firstOrNull { it.tagId == tagId } ?: return@launch
+      val siblings = all.filter { it.category == current.category }
+        .sortedWith(compareBy({ it.sortOrder }, { it.name }))
+      val index = siblings.indexOfFirst { it.tagId == tagId }
+      val targetIndex = if (up) index - 1 else index + 1
+      if (index < 0 || targetIndex !in siblings.indices) return@launch
+      val target = siblings[targetIndex]
+      // 交换两者 sortOrder；若相同则用下标强制区分
+      val currentOrder = current.sortOrder
+      val targetOrder = target.sortOrder
+      songTagRepository.updateSortOrder(current.tagId, if (currentOrder == targetOrder) targetIndex else targetOrder)
+      songTagRepository.updateSortOrder(target.tagId, if (currentOrder == targetOrder) index else currentOrder)
+      refresh()
+    }
+  }
+
   fun deleteTag(tagId: String) {
     viewModelScope.launch {
       songTagRepository.deleteTag(tagId)

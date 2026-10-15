@@ -43,6 +43,9 @@ interface SongTagRepository {
 
   suspend fun updateColor(tagId: String, colorArgb: Int?)
 
+  /** 排序（上移/下移）：写 sortOrder。 */
+  suspend fun updateSortOrder(tagId: String, sortOrder: Int)
+
   /** 合并同义词：把 from 的所有关系迁移到 into，然后删除 from 定义。 */
   suspend fun mergeTag(fromTagId: String, intoTagId: String)
 

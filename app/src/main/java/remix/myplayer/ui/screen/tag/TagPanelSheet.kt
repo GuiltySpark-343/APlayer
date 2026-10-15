@@ -37,6 +37,7 @@ import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 import remix.myplayer.R
 import remix.myplayer.data.db.room.entity.TagDef
+import remix.myplayer.data.model.tag.TagSeeds
 import remix.myplayer.ui.theme.LocalTheme
 import remix.myplayer.ui.widget.common.TextPrimary
 import remix.myplayer.ui.widget.common.TextSecondary
@@ -56,6 +57,7 @@ fun TagPanelSheet(
   onScore: (String, Int) -> Unit,
   onUndo: () -> Unit,
   onClearUndo: () -> Unit,
+  onMore: () -> Unit,
   onDismiss: () -> Unit,
 ) {
   if (!state.visible) return
@@ -109,6 +111,30 @@ fun TagPanelSheet(
               .weight(1f)
               .verticalScroll(rememberScrollState())
           ) {
+            // ① 常用标签：已选中的标签按覆盖歌曲数排序，置顶 ≤12 个
+            val allChips = state.groups.flatMap { it.second }.filter { it.kind != TagDef.KIND_SCALE }
+            val common = allChips
+              .filter { state.selected.contains(it.tagId) }
+              .sortedByDescending { state.usage[it.tagId] ?: 0 }
+              .take(12)
+            if (common.isNotEmpty()) {
+              TextPrimary(
+                text = stringResource(R.string.tag_common),
+                fontSize = 13.sp,
+                color = LocalTheme.current.primary,
+                modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+              )
+              FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                common.forEach { tag ->
+                  FilterChip(
+                    selected = true,
+                    onClick = { onToggle(tag) },
+                    label = { Text(chipLabel(tag, state, true)) }
+                  )
+                }
+              }
+            }
+
             state.groups.forEach { (category, tags) ->
               val chips = tags.filter { it.kind != TagDef.KIND_SCALE }
               if (chips.isEmpty()) return@forEach
@@ -120,10 +146,11 @@ fun TagPanelSheet(
               )
               FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 chips.forEach { tag ->
+                  val isSelected = state.selected.contains(tag.tagId)
                   FilterChip(
-                    selected = state.selected.contains(tag.tagId),
+                    selected = isSelected,
                     onClick = { onToggle(tag) },
-                    label = { Text(tag.name) }
+                    label = { Text(chipLabel(tag, state, isSelected)) }
                   )
                 }
               }
@@ -165,6 +192,20 @@ fun TagPanelSheet(
             }
           }
 
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Text(
+              text = stringResource(R.string.tag_more),
+              color = LocalTheme.current.primary,
+              fontSize = 14.sp,
+              modifier = Modifier
+                .clickable { onMore() }
+                .padding(horizontal = 4.dp, vertical = 6.dp)
+            )
+          }
+
           state.lastTagName?.let { name ->
             Spacer(Modifier.height(8.dp))
             Row(
@@ -190,6 +231,16 @@ fun TagPanelSheet(
       }
     }
   }
+}
+
+/**
+ * ③ 选中情绪 chip 显示预设/实际坐标（如「开心 5/4」）——暗示可微调（设计 §4.6-⑤）。
+ */
+private fun chipLabel(tag: TagDef, state: TagPanelViewModel.UiState, selected: Boolean): String {
+  if (!selected || !TagSeeds.MOOD_PRESETS.containsKey(tag.tagId)) return tag.name
+  val v = state.scores[TagSeeds.TAG_VALENCE]?.toInt()
+  val a = state.scores[TagSeeds.TAG_AROUSAL]?.toInt()
+  return if (v != null && a != null) tag.name + " " + v + "/" + a else tag.name
 }
 
 @Composable

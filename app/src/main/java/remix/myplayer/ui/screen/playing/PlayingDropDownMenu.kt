@@ -45,6 +45,7 @@ import remix.myplayer.ui.nav.ExtraRestorePlayingScreen
 import remix.myplayer.ui.nav.LocalNavController
 import remix.myplayer.ui.nav.MessageNotifier
 import remix.myplayer.ui.nav.RouteEq
+import remix.myplayer.ui.nav.RouteSongTags
 import remix.myplayer.ui.nav.RouteTagEdit
 import remix.myplayer.ui.screen.tag.TagPanelSheet
 import remix.myplayer.ui.theme.LocalTheme
@@ -261,6 +262,10 @@ fun PlayingDropDownMenu(
     onScore = tagPanelVM::setScore,
     onUndo = tagPanelVM::undoLast,
     onClearUndo = tagPanelVM::clearUndo,
+    onMore = {
+      tagPanelVM.dismiss()
+      navigateFromPlayingScreen(RouteSongTags)
+    },
     onDismiss = tagPanelVM::dismiss
   )
 }

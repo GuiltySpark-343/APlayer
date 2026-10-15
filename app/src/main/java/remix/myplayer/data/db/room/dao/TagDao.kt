@@ -33,6 +33,9 @@ interface TagDao {
   @Query("UPDATE tags SET name = :name, updatedAt = :updatedAt WHERE tagId = :tagId")
   suspend fun renameTag(tagId: String, name: String, updatedAt: Long)
 
+  @Query("UPDATE tags SET sortOrder = :sortOrder, updatedAt = :updatedAt WHERE tagId = :tagId")
+  suspend fun updateSortOrder(tagId: String, sortOrder: Int, updatedAt: Long): Int
+
   @Query("UPDATE tags SET colorArgb = :color, updatedAt = :updatedAt WHERE tagId = :tagId")
   suspend fun updateColor(tagId: String, color: Int?, updatedAt: Long)
 
