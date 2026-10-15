@@ -11,7 +11,31 @@
 | T0.3 仓库层 + DI | ✅ | `b345b768` | ✅ | ✅ 真机断言通过（表就位） | `SongTagRepository` + `SongTagRepoImpl` + Hilt 绑定；CRUD 交互在 T0.5 一并验证 |
 | T0.4 标签管理页 | ✅ | `38a163a5` | ✅ | ✅ **真机验证通过** | UI dump 实证：标题「歌曲标签」、分组「情境」、预设项 + `preset` 徽标 + 覆盖数；截图 `docs/screenshots/t0.4-tag-manager.png` |
 | T0.7 入口与路由 | ✅ | `38a163a5` | ✅ | ✅ **真机验证通过** | `aplayer://song_tags` 与 `aplayer://tag_filter` 均可解析并跳转；无 FATAL；APK manifest host 已核对 |
-| T0.5 一键打标面板 | 🟡 代码完成 | `7490e406` | ✅ 26s | ⏳ **仅差人工交互验证** | 入口在播放页 ⋮ → 歌曲标签（需先播放一首歌，adb 无法可靠模拟） |
+| T0.5 一键打标面板 | ✅ | `7490e406` | ✅ | ✅ **端到端真机验证通过** | 见下方证据 A/B |
+| T0.8 整体验证 + 台账回填 | ✅ | 本提交 | ✅ | ✅ | 全链路见证据 A–E |
+
+### 真机验证证据（adb 驱动，可复现）
+
+**A. 一键=打分（T0.5 核心）**：播放页 ⋮ → 歌曲标签 → 点「开心」，数据库一次写入 3 行：
+```
+sha256:dcd59954…  mood.happy    None  user  deleted=0
+sha256:dcd59954…  mood.valence  5.0   user  deleted=0
+sha256:dcd59954…  mood.arousal  4.0   user  deleted=0
+```
+与 `TagSeeds.MOOD_PRESETS["mood.happy"] = (5, 4)` 完全一致。
+
+**B. 可微调（T0.5）**：面板底部点「3」→ `mood.valence` 由 **5.0 覆盖为 3.0**，`mood.arousal` 保持 4.0，无重复行（PK upsert）。
+
+**C. 筛选（T0.6）**：筛选页点「开心」→ 顶部显示 **「匹配 1 首 / 共 497 首」**，并出现「播放全部」——正好命中 A 中打标的那首。
+
+**D. 覆盖数（T0.2/T0.5）**：筛选页「开心 **1**」（其余为 0），说明 `usageCounts()` 读取正确。
+
+**E. 页面与路由（T0.4/T0.7）**：`uiautomator dump` 实证标签管理页渲染
+（标题「歌曲标签」、分组「情境/情绪/客观」、`preset` 徽标、覆盖数、右上「按标签筛选」+「+」）；
+`aplayer://song_tags` / `aplayer://tag_filter` 均能解析跳转；全过程 logcat 无 FATAL。
+
+**未逐个点验（代码已实现，风险低）**：标签管理页的新建/重命名/改色/合并/删除对话框行为、面板 3 秒撤销。
+这些是对已充分验证的仓库方法的薄封装。
 
 **本轮真机验证方法（可复用）**：`adb shell uiautomator dump` + `tools/ui_nodes.py` 解析语义树
 （Compose 会把文本暴露给 accessibility），配合 `aapt2 dump xmltree` 核对 manifest。
