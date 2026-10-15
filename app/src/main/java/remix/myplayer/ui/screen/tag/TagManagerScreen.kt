@@ -136,6 +136,14 @@ fun TagManagerScreen() {
     is TagDialog.Actions -> ActionsDialog(
       def = d.def,
       onDismiss = { dialog = null },
+      onMoveUp = {
+        viewModel.moveTag(d.def.tagId, true)
+        dialog = null
+      },
+      onMoveDown = {
+        viewModel.moveTag(d.def.tagId, false)
+        dialog = null
+      },
       onRename = { dialog = TagDialog.Rename(d.def) },
       onColor = { dialog = TagDialog.Color(d.def) },
       onMerge = { dialog = TagDialog.Merge(d.def) },
@@ -263,6 +271,8 @@ private fun CreateDialog(
 private fun ActionsDialog(
   def: TagDef,
   onDismiss: () -> Unit,
+  onMoveUp: () -> Unit,
+  onMoveDown: () -> Unit,
   onRename: () -> Unit,
   onColor: () -> Unit,
   onMerge: () -> Unit,
@@ -273,6 +283,8 @@ private fun ActionsDialog(
     title = { Text(def.name) },
     text = {
       Column {
+        ActionText(stringResource(R.string.tag_move_up), onMoveUp)
+        ActionText(stringResource(R.string.tag_move_down), onMoveDown)
         ActionText(stringResource(R.string.tag_rename), onRename)
         ActionText(stringResource(R.string.tag_change_color), onColor)
         ActionText(stringResource(R.string.tag_merge), onMerge)

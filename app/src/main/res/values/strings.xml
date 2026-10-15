@@ -706,4 +706,8 @@
   <string name="tag_matched">%1$d of %2$d songs</string>
   <string name="tag_filter_empty">Pick tags above to filter songs</string>
   <string name="tag_fine_tune">Fine-tune</string>
+  <string name="tag_common">Frequent</string>
+  <string name="tag_move_up">Move Up</string>
+  <string name="tag_move_down">Move Down</string>
+  <string name="tag_play_shuffle">Shuffle</string>
 </resources>

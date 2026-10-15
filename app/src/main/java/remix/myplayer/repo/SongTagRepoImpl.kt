@@ -80,6 +80,10 @@ class SongTagRepoImpl @Inject constructor(
     tagDao.updateColor(tagId, colorArgb, now())
   }
 
+  override suspend fun updateSortOrder(tagId: String, sortOrder: Int) {
+    tagDao.updateSortOrder(tagId, sortOrder, now())
+  }
+
   override suspend fun mergeTag(fromTagId: String, intoTagId: String) {
     if (fromTagId == intoTagId) return
     val ts = now()

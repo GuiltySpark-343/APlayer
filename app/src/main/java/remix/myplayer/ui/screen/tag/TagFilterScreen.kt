@@ -82,8 +82,10 @@ fun TagFilterScreen() {
           modifier = Modifier.fillMaxWidth(),
           verticalAlignment = Alignment.CenterVertically
         ) {
+          val totalMs = songs.sumOf { song -> song.duration }
           TextSecondary(
-            text = stringResource(R.string.tag_matched, songs.size, state.allCount),
+            text = stringResource(R.string.tag_matched, songs.size, state.allCount) +
+              if (songs.isEmpty()) "" else "  ·  " + formatDuration(totalMs),
             fontSize = 12.sp,
             modifier = Modifier.weight(1f)
           )
@@ -96,6 +98,20 @@ fun TagFilterScreen() {
                 .clickable {
                   setPlayQueue(
                     songs,
+                    MusicUtil.makeCmdIntent(Command.PLAY_AT)
+                      .putExtra(MusicService.EXTRA_POSITION, 0)
+                  )
+                }
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+            Text(
+              text = stringResource(R.string.tag_play_shuffle),
+              color = LocalTheme.current.primary,
+              fontSize = 14.sp,
+              modifier = Modifier
+                .clickable {
+                  setPlayQueue(
+                    songs.shuffled(),
                     MusicUtil.makeCmdIntent(Command.PLAY_AT)
                       .putExtra(MusicService.EXTRA_POSITION, 0)
                   )
@@ -137,6 +153,11 @@ fun TagFilterScreen() {
       }
     }
   }
+}
+
+private fun formatDuration(ms: Long): String {
+  val minutes = ms / 60000.0
+  return if (minutes < 60) "%.0f min".format(minutes) else "%.1f h".format(minutes / 60.0)
 }
 
 @Composable
