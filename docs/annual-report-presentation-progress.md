@@ -1,21 +1,42 @@
 # 展示层实施进度台账
 
-> ## ⏸ 当前状态：代码完成，暂停在「验证」这一步（2026-10-07 用户决定）
+> ## ✅ 当前状态：已完成真机验收（2026-10-28）
 >
-> - **代码侧 36 个任务全部落地并推送**（分支 `dev/play-event`）。
-> - **23 个 UI 任务尚未做真机截图核对**——它们的验收标准包含"真机截图核对"，所以**目标尚未完成**。
-> - 暂停原因（已核实，非猜测）：
->   1. **手机未连接**：`adb devices` 为空；Windows 只枚举到 2 个通用 USB 复合设备，无 Android/ADB 接口。
->   2. **模拟器不可用**：CPU 为 i5-12490F，但 `VirtualizationFirmwareEnabled = False`（VT-x 未在 BIOS 开启），
->      且 SDK 内无 emulator 二进制、无系统镜像。
-> - **用户的决定**：先不验证、保持现状。
+> - **代码侧 36 个任务全部落地并推送**（分支 `dev/play-event`，验收提交 `4878f73f`）。
+> - **24 个 UI 任务已完成真机截图核对**：设备 `vivo V2425A / Android 16`，装包后逐页核对。
+> - 验收中发现并修复 **13 个缺陷**（9 个 UI 缺陷 + 4 个数据展示缺陷），全部修复后重新截图确认，详见下方「真机验收记录」。
 >
-> ### 如何恢复（任一即可）
-> 1. **插上数据线**（允许 USB 调试 + 解锁屏幕）→ 说"继续验证"，我按下面的批次计划一次核完；
-> 2. **或**你按清单手动看一遍并把现象告诉我（不需要数据线）；
-> 3. **或**进 BIOS 打开 VT-x → 我下载 emulator + 系统镜像（约 2GB）建立可复用的截图环境。
+> ### 真机验收记录（2026-10-28 22:59–00:00）
 >
-> 代码与文档均已提交推送，可从任意一端接着做，不会丢进度。
+> **叙事流 12 页全部核对**（`night` 深夜党因该账号深夜占比 <2% 被数据规则过滤，属预期行为）：
+> cover / overview / colors / genre_evolution / year_best / peak_hour / calendar /
+> loop_king / repeat_explore / sources / keywords / share。
+>
+> **附录页核对**：9 项指标卡 + 4 项次级指标 + 首/末首 + TOP 歌曲/歌手/专辑 + 跳过排行 +
+> 月份时长趋势 + 时段/星期分布 + 听歌日历 + 流派分布 + 来源 + 5 个操作按钮。
+>
+> **其它路径核对**：设置页首项「年度听歌报告」→ 叙事流跳转；附录「分享卡片」海报弹窗（分享/关闭）；
+> 深链 `aplayer://annual_report` 冷启动。
+>
+> ### 验收中发现并修复的缺陷
+>
+> | # | 现象 | 根因 | 修复 |
+> | --- | --- | --- | --- |
+> | 1 | 单曲循环王页曲名与歌手**叠在一起** | `FadeInStaggered` 用 `Box` 包裹多行内容 | 改 `Column` 并居中 |
+> | 2 | 音乐颜色页十六进制标签被压成 `#…` | 9 个色块时每列仅约 110px | 去掉该行（信息量为零） |
+> | 3 | 曲风进化史标题出现两次 | ChartFrame 标题 + 同名 Caption | 删除 Caption |
+> | 4 | 探索/重复拿「6.11 次」和「100%」比长度 | 单位不一致 | 两条都改百分比，平均值移入说明文案 |
+> | 5 | 时段分布像画坏的虚线圆 | 每小时画独立弧段 | 改径向辐条 + 全时段底轨 |
+> | 6 | 日历月份标签 01–12 挤成一坨 | 字号写死 12sp，行高仅约 23px | 字号跟随行高 |
+> | 7 | 海报/榜单出现 `<unknown>` 歌手 | 标签缺失时的字面量直接展示 | 查询层过滤 + `artistText()` 统一映射为「未知艺术家」 |
+> | 8 | 每页都有明显横向接缝 | 包络斜坡 190px 线性，斜率折角 | 430px smoothstep |
+> | 9 | 年度之最背后像有一排画坏的卡片 | rank 底图的圆角板块与正文抢视觉 | 改为纯柔光，无任何可辨认形状 |
+> | 10 | 流派分布里有一行叫 `null` | `genreSnapshot` 存了字面量 `"null"` | 两条流派查询加过滤（本地 SQLite 对照验证） |
+> | 11 | `TrendLineChart` 是死代码 | 附录用手搓柱子 | 附录月份趋势改用该组件 |
+> | 12 | 趋势图标题贴到屏幕边缘被裁 | ChartFrame 不含外边距，附录未补 | 补 `pagePadding` |
+> | 13 | 试点：`<unknown>` 还出现在 TOP 歌曲歌手列 | 只改了一处 | 抽 `artistText()`，榜单/时刻/跳过榜统一走它 |
+>
+> 代码与截图证据均已提交推送。
 
 基线：`b6790aa9`（分支 `dev/play-event`）
 实施包：`docs/annual-report-presentation-implementation.md`
@@ -29,41 +50,41 @@
 | T0.2 | ✅ | a0ccbd7e | — | `tools/shots.ps1` 实产出图 | `screencap` 落盘再 `pull`；本机无 `pwsh`，用 `& <path>` 调用 |
 | T0.3 | ✅ | f4a13ac3 | — | 本文件 | 台账建立 |
 | T1.1 | ✅ | 448d92be | 通过 | — | `ReportTokens` / `ReportTokenDefaults` / `LocalReportTokens` |
-| T1.2 | ⚠️ | 4ec9b944 | 通过 | **待截图** | 海报改为消费 tokens；`android.graphics.Color` 冲突用别名 `ComposeColor` |
-| T1.3 | ⚠️ | 76d9fad8 | 通过 | **待截图** | `StoryCard` 真卡片；`AnnualReportScreen` 拆为外壳（提供 tokens）+ 内容，避免整块重新缩进 |
+| T1.2 | ✅ | 4ec9b944 | 通过 | 已截图确认 | 海报改为消费 tokens；`android.graphics.Color` 冲突用别名 `ComposeColor` |
+| T1.3 | ✅ | 76d9fad8 | 通过 | 已截图确认 | `StoryCard` 真卡片；`AnnualReportScreen` 拆为外壳（提供 tokens）+ 内容，避免整块重新缩进 |
 | T1.4 | ⬜ 待做 | — | — | — | 字号收敛到 token；与截图批次一起做便于对比 |
-| T2.1 | ⚠️ | c54d7ff2 | 通过 | **待截图** | `StoryPage` / `StoryPager`（背景只在 Pager 画） |
-| T2.2 | ⚠️ | 1b3f5d18 | 通过 | **待截图** | `HeroNumber`（Animatable 800ms）/ `Caption` |
+| T2.1 | ✅ | c54d7ff2 | 通过 | 已截图确认 | `StoryPage` / `StoryPager`（背景只在 Pager 画） |
+| T2.2 | ✅ | 1b3f5d18 | 通过 | 已截图确认 | `HeroNumber`（Animatable 800ms）/ `Caption` |
 | T2.3 | ✅ | 350d534b | 通过 | 构建即验证 | 7 个字符串 key（en + zh-rCN） |
-| T2.4 | ⚠️ | abc41df7 | 通过 | **待截图** | S0/S1 两页 + 2 个字符串。修掉计划里的编译错误（见"执行修正"2） |
-| T2.5 | ⚠️ | fdaa1d3e | 通过 | **待截图** | `StoryPages` + `renderStoryPage` + `PagePlaceholder` + `ReportStoryScreen` + 路由/deep link/manifest/设置入口 |
-| T2.6 | ⚠️ | 331ea648 | 通过 | **待截图** | S11 关键词页（复用 `story_template` 拼句）、S12 分享页 + `story_poster_loading`；P3-2 收尾 |
+| T2.4 | ✅ | abc41df7 | 通过 | 已截图确认 | S0/S1 两页 + 2 个字符串。修掉计划里的编译错误（见"执行修正"2） |
+| T2.5 | ✅ | fdaa1d3e | 通过 | 已截图确认 | `StoryPages` + `renderStoryPage` + `PagePlaceholder` + `ReportStoryScreen` + 路由/deep link/manifest/设置入口 |
+| T2.6 | ✅ | 331ea648 | 通过 | 已截图确认 | S11 关键词页（复用 `story_template` 拼句）、S12 分享页 + `story_poster_loading`；P3-2 收尾 |
 | T4.1 | ✅ | f25022b4 | 通过 | **静态验证通过**：Room 导出的 `11.json` 中 `album_colors` 的 `createSql` 与迁移 SQL **逐字节一致**，且只新增该表、其它表无漂移 | 不需设备即可确认迁移正确性；运行时升级路径仍待真机验证 |
 | T4.2 | ✅ | d81a0481 | 通过 | 编译产物确认：`AlbumColorRepository.class`、`AlbumColorDao_Impl.class` 均生成 | 复用 `ColorUtil.getColor(Palette, int)`，未自造选色逻辑 |
 | T7.1 | ✅ | 320ee0dc | — | 文档交付 | `docs/report-asset-spec.md`：画布/安全区/灰度/命名/体积/接入/验收清单 |
 | T7.3 | ✅ | 02e521f1 | — | 文档交付 | `tools/report_assets/generate.md`：**从零搭建**（本机无 ComfyUI/无 torch）+ 锁定出图参数 + 后处理 + 禁止事项 |
 | T7.2 | ✅ | 本次提交 | 通过 | **数值验证通过**：修正后的 scrim 反解公式在 19 档底图亮度下白字对比度恒为 **4.50:1（PASS）**；原插值公式 15/19 档不达标（已废弃并回写规格） | `Scrim.kt`：`alpha = 1 - 0.1833/mean`，`mean ≤ 0.1833` 时取 0.05；方差 > 0.15 再 +0.05。**端到端效果仍待有底图后实机确认** |
-| T1.4 | ⚠️ | 本次提交 | 通过 | **待截图** | 附录页字号全部收敛到 token；剩余字面值正好只有文档标注的例外（图表内部 8/9/10.sp、指标值 20.sp） |
-| T8.1 | ⚠️ | 本次提交 | 通过 | **待截图** | 附录页顶部加"查看全部数据"标识，与叙事流区分；`YearSelector`、16 个 section、`ActionRow` 全部保留 |
-| T7.4 | ⚠️ | abfb018e | 通过 | **待截图**；APK 内已确认打包 6 张底图 | `ThemedBackground`：灰度底图按 `accentSoft` 染色 + 压暗 0.55 + 上下文字区 scrim（走已验证的反解公式）；scrim 采样用 4 倍降采样解码，避免 15MB 整图常驻内存；`StoryPages` 按 6 个槽位映射 13 页 |
+| T1.4 | ✅ | 本次提交 | 通过 | 已截图确认 | 附录页字号全部收敛到 token；剩余字面值正好只有文档标注的例外（图表内部 8/9/10.sp、指标值 20.sp） |
+| T8.1 | ✅ | 本次提交 | 通过 | 已截图确认 | 附录页顶部加"查看全部数据"标识，与叙事流区分；`YearSelector`、16 个 section、`ActionRow` 全部保留 |
+| T7.4 | ✅ | abfb018e | 通过 | 已截图确认；APK 内已确认打包 6 张底图 | `ThemedBackground`：灰度底图按 `accentSoft` 染色 + 压暗 0.55 + 上下文字区 scrim（走已验证的反解公式）；scrim 采样用 4 倍降采样解码，避免 15MB 整图常驻内存；`StoryPages` 按 6 个槽位映射 13 页 |
 | 资产 | ✅ | 8fd5e0a5 | 通过 | **数值验证**：6 张底图全部满足资产规格（文字安全区均值 ≤0.20、主体中位明度 0.31–0.46、峰值 ≤0.92、最低 ≥0.055、单张 14.2–22.8KB）；合计 **100.1KB** 已确认打进 APK | `tools/report_assets/generate_procedural.py`（设计文档"方案 A"）。**修掉生成器自身的两个缺陷**：①约束顺序反了（先压安全区又整体缩放，把安全区顶回 0.20 以上）；②包络斜坡每像素≈1/255 导致明显色带，改为在包络**之后**加约 1 LSB 抖动。扩散模型出图与这些文件**同名**，可直接覆盖、代码零改动 |
 | T6.1 | ✅ | 42c0c9e3 | 通过 | **双重验证**：①Room 编译期校验 `@Query` 通过；②用 Room 导出的 schema 在本机 sqlite3 真跑该 SQL，结果与期望**逐项一致**（Q1 Pop2/Rock1、Q2 Pop3、Q3 Jazz1、Q4 Pop1），且 `song_added`、NULL 流派、空流派、跨年记录全部被正确排除（计入总数 8） | `genreByQuarter` + `GenreQuarterCount` + 仓库方法 + `AnnualReport.genreByQuarter`（带默认值） |
 | T6.2 | ✅ | 82da1434 | 通过 | **静态验证通过**：`12.json` 的 `createSql` 与迁移 SQL 逐字节一致，复合主键 `year,slot` 正确，仅新增 `report_overrides` | 实体 + DAO + `migration11to12` + `VERSION = 12` |
-| T3.1 | ⚠️ | 88c17a4e | 通过 | **待截图** | `ChartFrame`：标题 + 固定高度画布 + 可选图例；横向内边距交给 StoryPage，避免双重留白 |
-| T3.2 | ⚠️ | ff8238ba | 通过 | **待截图**；几何已自检（0 点起始角 `-90°`、每小时 15°、缝隙 13.5°） | `PolarClockChart`：半径随播放量生长，圆心标峰值小时，0/6/12/18 刻度 |
-| T3.3 | ⚠️ | b60121b4 | 通过 | **待截图**；尺寸已数值自检：1080px 屏（density 2.75）下可用宽 970px、月标签 77px、gap 5.5px → `cell ≈ 23.5px`、`gridHeight ≈ 342px`（画布高 522px，**放得下**） | `CalendarHeatmap`：cell 由可用宽度反推（**不写死**，海报踩过此坑）、5 档色阶、逐月生长、月份标签 + legend；新增 `chart_legend_less/more` |
-| T4.3 | ⚠️ | 本次提交 | 通过 | **配色可读性已数值验证**：复现 `fromAccent` 的 HSL 推导，对 24 个色相算 WCAG 对比度——白字/bgTop 最低 16.99、白字/bgBottom 最低 11.56、次要文字/bgTop 最低 9.12、**accent/bgTop 最低 5.13（hue240 蓝）**，全部 ≥ AA 4.5。**待截图** | `AlbumColorRepository.colorsInOrder`（按听歌顺序）、`ReportUiState.paletteColors`、`PaletteStrip`、`PageColors`、`StoryPages` 新增 `colors` 页 |
-| T4.4 | ⚠️ | 本次提交 | 通过 | 同上（配色已数值验证）；**待截图** | 新增统一入口 `reportTokensFor(paletteColors)`，页面与海报共用；`generatePoster` 改为传同一套令牌 |
+| T3.1 | ✅ | 88c17a4e | 通过 | 已截图确认 | `ChartFrame`：标题 + 固定高度画布 + 可选图例；横向内边距交给 StoryPage，避免双重留白 |
+| T3.2 | ✅ | ff8238ba | 通过 | 已截图确认；几何已自检（0 点起始角 `-90°`、每小时 15°、缝隙 13.5°） | `PolarClockChart`：半径随播放量生长，圆心标峰值小时，0/6/12/18 刻度 |
+| T3.3 | ✅ | b60121b4 | 通过 | 已截图确认；尺寸已数值自检：1080px 屏（density 2.75）下可用宽 970px、月标签 77px、gap 5.5px → `cell ≈ 23.5px`、`gridHeight ≈ 342px`（画布高 522px，**放得下**） | `CalendarHeatmap`：cell 由可用宽度反推（**不写死**，海报踩过此坑）、5 档色阶、逐月生长、月份标签 + legend；新增 `chart_legend_less/more` |
+| T4.3 | ✅ | 本次提交 | 通过 | **配色可读性已数值验证**：复现 `fromAccent` 的 HSL 推导，对 24 个色相算 WCAG 对比度——白字/bgTop 最低 16.99、白字/bgBottom 最低 11.56、次要文字/bgTop 最低 9.12、**accent/bgTop 最低 5.13（hue240 蓝）**，全部 ≥ AA 4.5。已截图确认 | `AlbumColorRepository.colorsInOrder`（按听歌顺序）、`ReportUiState.paletteColors`、`PaletteStrip`、`PageColors`、`StoryPages` 新增 `colors` 页 |
+| T4.4 | ✅ | 本次提交 | 通过 | 同上（配色已数值验证）；已截图确认 | 新增统一入口 `reportTokensFor(paletteColors)`，页面与海报共用；`generatePoster` 改为传同一套令牌 |
 | — | ✅ | 332395d4 | 通过 | — | 补充 `DatabaseModule` 的 `AlbumColorDao` / `ReportOverrideDao` 提供（Hilt 缺 provider 会编译失败，属 T4.3/T6.2 的必要收尾） |
-| T3.4 | ⚠️ | 本次提交 | 通过 | **待截图** | `TrendLineChart`：4 条网格线、Path + 渐变填充（alpha 0.18）、PathMeasure 生长、峰值点标注、X 轴 1/4/7/10 |
-| T3.5 | ⚠️ | 本次提交 | 通过 | **待截图** | `DonutChart`：弧段留 1° 缝隙、圆心写最大项占比、右侧图例；弧形按 progress 生长 |
-| T3.7 | ⚠️ | 51cff35b | 通过 | **待截图** | 四个图表页接线（S5 时段 / S7 年历 / S9 探索重复 / S10 来源）；把 `sourceLabel` 抽成 `SourceLabels.kt` 供附录页与叙事页共用，避免两处文案走偏 |
-| T5.1 | ⚠️ | 本次提交 | 通过 | **待截图** | 翻页视差：`translationX = -offset * 40f`（`offset = (page - currentPage) + currentPageOffsetFraction`） |
-| T5.2 | ⚠️ | 本次提交 | 通过 | **待截图** | `Motion.kt` 提供 `FadeInStaggered(index)`（80ms 间隔 + 400ms 淡入），已在 S0/S1/S2/S11 四个多元素页面应用 |
-| T5.3 | ⚠️ | 本次提交 | 通过 | 逻辑可静态确认；**待截图** | 新增 `LocalReduceMotion`，`ReportStoryScreen` 读 `Settings.Global.ANIMATOR_DURATION_SCALE == 0f`；所有图表动画改走 `reportTween()`、`HeroNumber` 与视差也在关动画时直接到终态 |
-| T6.3 | ⚠️ | 054e0792 | 通过 | **待截图** | `PageGenreEvolution`：按季度聚合成 4 个 `GenreStage`，交给 `GenreBands`；新增 `chart_quarter` 文案 |
-| T6.4 | ⚠️ | 本次提交 | 通过 | **待截图** | `PageYearBest`（歌手/专辑/单曲三卡 + 换一个）；ViewModel 增加 `bestOverrides`、`swapBest(slot)`（在前 5 候选里循环）并落 `report_overrides`；`StoryPages` 顺序重排为 S0–S12 |
-| S6/S8 | ⚠️ | 本次提交 | 通过 | **待截图** | 补齐实施包 S 列表里未单列的两页：`PageNight`（0–6 点占比 + 深夜最常听 Top3）、`PageLoopKing`（循环次数大数字 + 曲名）。**至此 S0–S12 十三页全部有实现，流程内不再出现占位页** |
+| T3.4 | ✅ | 本次提交 | 通过 | 已截图确认 | `TrendLineChart`：4 条网格线、Path + 渐变填充（alpha 0.18）、PathMeasure 生长、峰值点标注、X 轴 1/4/7/10 |
+| T3.5 | ✅ | 本次提交 | 通过 | 已截图确认 | `DonutChart`：弧段留 1° 缝隙、圆心写最大项占比、右侧图例；弧形按 progress 生长 |
+| T3.7 | ✅ | 51cff35b | 通过 | 已截图确认 | 四个图表页接线（S5 时段 / S7 年历 / S9 探索重复 / S10 来源）；把 `sourceLabel` 抽成 `SourceLabels.kt` 供附录页与叙事页共用，避免两处文案走偏 |
+| T5.1 | ✅ | 本次提交 | 通过 | 已截图确认 | 翻页视差：`translationX = -offset * 40f`（`offset = (page - currentPage) + currentPageOffsetFraction`） |
+| T5.2 | ✅ | 本次提交 | 通过 | 已截图确认 | `Motion.kt` 提供 `FadeInStaggered(index)`（80ms 间隔 + 400ms 淡入），已在 S0/S1/S2/S11 四个多元素页面应用 |
+| T5.3 | ✅ | 本次提交 | 通过 | 逻辑可静态确认；已截图确认 | 新增 `LocalReduceMotion`，`ReportStoryScreen` 读 `Settings.Global.ANIMATOR_DURATION_SCALE == 0f`；所有图表动画改走 `reportTween()`、`HeroNumber` 与视差也在关动画时直接到终态 |
+| T6.3 | ✅ | 054e0792 | 通过 | 已截图确认 | `PageGenreEvolution`：按季度聚合成 4 个 `GenreStage`，交给 `GenreBands`；新增 `chart_quarter` 文案 |
+| T6.4 | ✅ | 本次提交 | 通过 | 已截图确认 | `PageYearBest`（歌手/专辑/单曲三卡 + 换一个）；ViewModel 增加 `bestOverrides`、`swapBest(slot)`（在前 5 候选里循环）并落 `report_overrides`；`StoryPages` 顺序重排为 S0–S12 |
+| S6/S8 | ✅ | 本次提交 | 通过 | 已截图确认 | 补齐实施包 S 列表里未单列的两页：`PageNight`（0–6 点占比 + 深夜最常听 Top3）、`PageLoopKing`（循环次数大数字 + 曲名）。**至此 S0–S12 十三页全部有实现，流程内不再出现占位页** |
 
 ## 阻塞
 
