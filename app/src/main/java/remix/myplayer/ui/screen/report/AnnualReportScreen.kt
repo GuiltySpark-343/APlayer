@@ -46,6 +46,7 @@ import remix.myplayer.data.db.room.dao.DayCount
 import remix.myplayer.data.model.report.AnnualReport
 import remix.myplayer.data.model.report.SongMoment
 import remix.myplayer.ui.component.report.StoryCard
+import remix.myplayer.ui.component.report.chart.TrendLineChart
 import remix.myplayer.ui.theme.LocalTheme
 import remix.myplayer.ui.theme.report.LocalReportTokens
 import remix.myplayer.ui.theme.report.ReportTokenDefaults
@@ -334,15 +335,25 @@ private fun MomentsCard(report: AnnualReport) {
   }
 }
 
+/**
+ * 标签缺失时库里存的是字面量 `<unknown>`，不要原样丢给用户。
+ * 榜单、时刻卡、跳过榜都要走这里，别再各写一份（漏一处就会露出 `<unknown>`）。
+ */
+@Composable
+private fun artistText(artist: String): String =
+  if (artist.startsWith("<unknown", ignoreCase = true)) {
+    stringResource(R.string.unknown_artist)
+  } else {
+    artist
+  }
+
 @Composable
 private fun MomentRow(label: String, moment: SongMoment) {
   Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
     TextSecondary(text = label, fontSize = LocalReportTokens.current.captionSize)
     Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
       TextPrimary(text = moment.title, fontSize = LocalReportTokens.current.bodySize)
-      if (moment.artist.isNotBlank()) {
-        TextSecondary(text = moment.artist, fontSize = LocalReportTokens.current.captionSize)
-      }
+      TextSecondary(text = artistText(moment.artist), fontSize = LocalReportTokens.current.captionSize)
     }
   }
 }
@@ -401,7 +412,7 @@ private fun SkipCard(report: AnnualReport) {
         Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
           TextPrimary(text = item.title, fontSize = LocalReportTokens.current.bodySize)
           if (item.artist.isNotBlank()) {
-            TextSecondary(text = item.artist, fontSize = LocalReportTokens.current.captionSize)
+            TextSecondary(text = artistText(item.artist), fontSize = LocalReportTokens.current.captionSize)
           }
         }
         Column(horizontalAlignment = Alignment.End) {
@@ -432,7 +443,7 @@ private fun RankRow(rank: Int, title: String, subtitle: String, listenMs: Long, 
     Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
       TextPrimary(text = title, fontSize = LocalReportTokens.current.bodySize)
       if (subtitle.isNotBlank()) {
-        TextSecondary(text = subtitle, fontSize = LocalReportTokens.current.captionSize)
+        TextSecondary(text = artistText(subtitle), fontSize = LocalReportTokens.current.captionSize)
       }
     }
     Column(horizontalAlignment = Alignment.End) {
@@ -448,30 +459,14 @@ private fun RankRow(rank: Int, title: String, subtitle: String, listenMs: Long, 
 @Composable
 private fun TrendCard(report: AnnualReport) {
   if (report.monthDistribution.isEmpty()) return
-  val maxMs = report.monthDistribution.maxOf { it.listenedMs }.coerceAtLeast(1L)
-  val byMonth = HashMap<Int, Long>()
-  report.monthDistribution.forEach { byMonth[it.month] = it.listenedMs }
-  StoryCard(title = stringResource(R.string.stat_trend)) {
-    Row(
-      modifier = Modifier.fillMaxWidth().height(64.dp),
-      verticalAlignment = Alignment.Bottom,
-      horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-      (1..12).forEach { month ->
-        val ms = byMonth[month] ?: 0L
-        Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-          Box(
-            modifier = Modifier
-              .width(8.dp)
-              .height((44f * ms / maxMs).coerceAtLeast(if (ms > 0) 2f else 1f).dp)
-              .background(
-                if (ms > 0) LocalTheme.current.primary else LocalTheme.current.textSecondary
-              )
-          )
-          TextSecondary(text = month.toString(), fontSize = 8.sp)
-        }
-      }
-    }
+  val tokens = LocalReportTokens.current
+  // ChartFrame 不含外边距（它假设外层 StoryPage 已留白），附录页要自己补，否则标题会贴到屏幕边缘
+  Box(modifier = Modifier.padding(horizontal = tokens.pagePadding)) {
+    TrendLineChart(
+      title = stringResource(R.string.stat_trend),
+      months = report.monthDistribution,
+      height = 120.dp
+    )
   }
 }
 
@@ -621,7 +616,7 @@ private fun LoopCard(report: AnnualReport) {
         Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
           TextPrimary(text = item.title, fontSize = LocalReportTokens.current.bodySize)
           if (item.artist.isNotBlank()) {
-            TextSecondary(text = item.artist, fontSize = LocalReportTokens.current.captionSize)
+            TextSecondary(text = artistText(item.artist), fontSize = LocalReportTokens.current.captionSize)
           }
         }
         TextPrimary(text = item.loops.toString() + " x", fontSize = LocalReportTokens.current.bodySize)

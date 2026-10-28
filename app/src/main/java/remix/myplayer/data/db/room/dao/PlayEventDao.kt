@@ -246,6 +246,7 @@ interface PlayEventDao {
     FROM play_events
     WHERE eventType = 'playback' AND year = :year
       AND genreSnapshot IS NOT NULL AND genreSnapshot != ''
+      AND LOWER(TRIM(genreSnapshot)) != 'null'
     GROUP BY genreSnapshot
     ORDER BY listenedMs DESC
     LIMIT :limit
@@ -285,10 +286,11 @@ interface PlayEventDao {
   @Query(
     """
     SELECT ((month - 1) / 3 + 1) AS quarter, genreSnapshot AS genre,
-           COUNT(*) AS plays, COALESCE(SUM(listenedMs), 0) AS listenedMs
+      COUNT(*) AS plays, COALESCE(SUM(listenedMs), 0) AS listenedMs
     FROM play_events
     WHERE eventType = 'playback' AND year = :year
       AND genreSnapshot IS NOT NULL AND genreSnapshot != ''
+      AND LOWER(TRIM(genreSnapshot)) != 'null'
     GROUP BY quarter, genreSnapshot
     ORDER BY quarter ASC, plays DESC
     """
