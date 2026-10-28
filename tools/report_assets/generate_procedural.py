@@ -57,16 +57,20 @@ def darkening_envelope() -> np.ndarray:
     """把上下文字安全区压暗，并在 190px 内平滑过渡，避免出现可见的压暗带。"""
     ys = np.arange(H, dtype=np.float32)
     env = np.ones(H, dtype=np.float32)
-    band, ramp = 0.28, 190.0
+    band, ramp = 0.26, 430.0
+
+    def smoothstep(t: np.ndarray) -> np.ndarray:
+        t = np.clip(t, 0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
 
     top_end = TOP_BAND[1]
     env[ys < top_end] = band
     m = (ys >= top_end) & (ys < top_end + ramp)
-    env[m] = band + (1.0 - band) * (ys[m] - top_end) / ramp
+    env[m] = band + (1.0 - band) * smoothstep((ys[m] - top_end) / ramp)
 
     bottom_start = BOTTOM_BAND[0]
     m2 = (ys >= bottom_start - ramp) & (ys < bottom_start)
-    env[m2] = 1.0 - (1.0 - band) * (ys[m2] - (bottom_start - ramp)) / ramp
+    env[m2] = band + (1.0 - band) * smoothstep((bottom_start - ys[m2]) / ramp)
     env[ys >= bottom_start] = band
     return env[:, None]
 
@@ -114,24 +118,21 @@ def art_chart(rng):
     layer, d = new_layer()
     y, step = 640, 74
     while y < 1820:
-        d.line([(0, y), (W, y)], fill=int(0.34 * 255), width=2)
+        d.line([(0, y), (W, y)], fill=int(0.16 * 255), width=2)
         y += step
         step = int(step * 1.06)
     for x in range(0, W + 1, 162):
-        d.line([(x, 600), (x, 1840)], fill=int(0.16 * 255), width=2)
-    return base + layer_to01(layer, 1.6) + noise(rng, 0.010, radius=2.0)
+        d.line([(x, 600), (x, 1840)], fill=int(0.08 * 255), width=2)
+    # 网格只当质感，不能压过正文：糊重一点
+    return base + layer_to01(layer, 5.0) + noise(rng, 0.010, radius=2.0)
 
 
 def art_rank(rng):
+    # 曾经画过 4 个圆角板块，真机上被当成"画坏的卡片"跟正文抢视觉，已改为纯柔光
     base = vertical_gradient(0.13, 0.32)
-    layer, d = new_layer()
-    for i in range(4):
-        top = 720 + i * 250
-        left = 180 + i * 30
-        d.rounded_rectangle([left, top, W - left, top + 190], radius=28,
-                            fill=int((0.22 + 0.06 * (3 - i)) * 255))
-        d.rounded_rectangle([left, top, W - left, top + 10], radius=5, fill=int(0.55 * 255))
-    return base + layer_to01(layer, 3.0) + noise(rng, 0.010, radius=2.0)
+    glow = radial_glow(0.5, 0.42, 540, 0.20) + radial_glow(0.20, 0.64, 400, 0.13)
+    haze = blur01(vertical_gradient(0.09, 0.0), 130)
+    return base + glow + haze + noise(rng, 0.010, radius=2.0)
 
 
 def art_night(rng):
