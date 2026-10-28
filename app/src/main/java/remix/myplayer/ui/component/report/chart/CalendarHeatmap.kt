@@ -90,10 +90,13 @@ fun CalendarHeatmap(
       val gridHeight = 12f * rowPitch - gap
       val top = ((size.height - gridHeight) / 2f).coerceAtLeast(0f)
 
+      // 月份标签字号必须跟着行高走：写死 captionSize 会挤成一坨（12 行只有 ~23px）
+      val labelFontSize = tokens.captionSize * 0.62f
+
       for (month in 1..12) {
         val layout = measurer.measure(
           AnnotatedString("%02d".format(month)),
-          style = TextStyle(color = tokens.textSecondary, fontSize = tokens.captionSize)
+          style = TextStyle(color = tokens.textSecondary, fontSize = labelFontSize)
         )
         val y = top + (month - 1) * rowPitch + (cell - layout.size.height) / 2f
         drawText(textLayoutResult = layout, topLeft = Offset(0f, y.coerceAtLeast(0f)))

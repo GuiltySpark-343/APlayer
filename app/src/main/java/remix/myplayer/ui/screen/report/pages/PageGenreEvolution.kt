@@ -32,12 +32,11 @@ fun PageGenreEvolution(report: AnnualReport, context: Context) {
   if (stages.isEmpty()) return
 
   StoryPage {
+    // 标题由 ChartFrame 提供，这里不要再放一遍同名 Caption（早期版本重复过）
     GenreBands(
       title = stringResource(R.string.story_genre_evolution),
       stages = stages,
       height = 140.dp
     )
-    Spacer(Modifier.height(16.dp))
-    Caption(stringResource(R.string.story_genre_evolution))
   }
 }

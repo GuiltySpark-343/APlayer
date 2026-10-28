@@ -117,6 +117,9 @@ interface PlayEventDao {
       COUNT(DISTINCT canonicalId) AS songs
     FROM play_events
     WHERE eventType = 'playback' AND year = :year
+      AND artistSnapshot IS NOT NULL
+      AND TRIM(artistSnapshot) != ''
+      AND LOWER(TRIM(artistSnapshot)) NOT IN ('<unknown>', 'unknown', 'unknown artist', '<unknown artist>')
     GROUP BY artistSnapshot
     ORDER BY plays DESC, listenedMs DESC
     LIMIT :limit

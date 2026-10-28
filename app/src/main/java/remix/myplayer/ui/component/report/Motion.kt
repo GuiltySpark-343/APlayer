@@ -4,7 +4,7 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import kotlinx.coroutines.delay
@@ -59,5 +60,11 @@ fun FadeInStaggered(
     label = "stagger$index"
   )
 
-  Box(modifier = Modifier.graphicsLayer { this.alpha = alpha }) { content() }
+  // 必须用 Column：内容常常是多行文字，用 Box 会把它们全叠在同一位置（S7 踩过）
+  Column(
+    modifier = Modifier.graphicsLayer { this.alpha = alpha },
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    content()
+  }
 }

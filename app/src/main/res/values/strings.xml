@@ -681,6 +681,7 @@
   <string name="chart_legend_less">Less</string>
   <string name="chart_legend_more">More</string>
   <string name="chart_quarter">Q%1$d</string>
+  <string name="story_repeat_avg">That works out to %1$s plays per song</string>
 
   <!-- Song tag system T0 -->
   <string name="song_tags">Song Tags</string>

@@ -12,19 +12,27 @@ import remix.myplayer.ui.component.report.StoryPage
 import remix.myplayer.ui.component.report.chart.DualBarCompare
 import remix.myplayer.ui.screen.report.ReportStoryResult
 
-/** S9 探索 vs 重复：左条重复度、右条探索度。 */
+/**
+ * S9 探索 vs 重复。
+ *
+ * 两条都必须是**百分比**才能放在同一根轴上比较；早期版本拿"平均播放次数 6.11"
+ * 去和"探索度 100%" 比长度，单位不同、毫无意义（已修）。
+ */
 @Composable
 fun PageRepeatExplore(story: ReportStoryResult) {
+  val explore = (story.explore * 100).coerceIn(0.0, 100.0)
+  val repeat = 100.0 - explore
+
   StoryPage {
     DualBarCompare(
       leftLabel = stringResource(R.string.stat_repeat),
-      leftValue = story.repeat.toFloat(),
+      leftValue = repeat.toFloat(),
       rightLabel = stringResource(R.string.stat_explore),
-      rightValue = (story.explore * 100).toFloat(),
-      leftText = "%.2f".format(story.repeat),
-      rightText = "%.0f%%".format(story.explore * 100)
+      rightValue = explore.toFloat(),
+      leftText = "%.0f%%".format(repeat),
+      rightText = "%.0f%%".format(explore)
     )
     Spacer(Modifier.height(16.dp))
-    Caption(stringResource(R.string.stat_repeat) + " / " + stringResource(R.string.stat_explore))
+    Caption(stringResource(R.string.story_repeat_avg, "%.2f".format(story.repeat)))
   }
 }

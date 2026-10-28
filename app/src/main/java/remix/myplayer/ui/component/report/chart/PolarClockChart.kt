@@ -57,22 +57,35 @@ fun PolarClockChart(
       val cy = size.height / 2f
       val shortest = minOf(size.width, size.height)
       val outer = shortest / 2f * 0.92f
-      val inner = shortest / 2f * 0.34f
-      val strokeWidth = 10.dp.toPx()
+      val inner = shortest / 2f * 0.30f
+      val span = outer - inner
+      val spokeWidth = 9.dp.toPx()
 
       counts.forEachIndexed { hour, count ->
-        if (count <= 0) return@forEachIndexed
-        val ratio = count.toFloat() / max
-        val radius = inner + (outer - inner) * ratio * progress
-        drawArc(
-          color = tokens.accent.copy(alpha = 0.35f + 0.65f * ratio),
-          startAngle = hour * 15f - 90f,
-          sweepAngle = 13.5f,
-          useCenter = false,
-          topLeft = Offset(cx - radius, cy - radius),
-          size = Size(radius * 2f, radius * 2f),
-          style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+        val angle = Math.toRadians((hour * 15f - 90f).toDouble())
+        val dirX = cos(angle).toFloat()
+        val dirY = sin(angle).toFloat()
+        val ratio = if (max > 0) count.toFloat() / max else 0f
+
+        // 底轨：即使该时段为 0 也画出极淡的一段，读者才看得出"24 格都在"
+        drawLine(
+          color = tokens.textSecondary.copy(alpha = 0.10f),
+          start = Offset(cx + dirX * inner, cy + dirY * inner),
+          end = Offset(cx + dirX * outer, cy + dirY * outer),
+          strokeWidth = spokeWidth,
+          cap = StrokeCap.Round
         )
+
+        if (count > 0) {
+          val tip = inner + span * ratio * progress
+          drawLine(
+            color = tokens.accent.copy(alpha = 0.45f + 0.55f * ratio),
+            start = Offset(cx + dirX * inner, cy + dirY * inner),
+            end = Offset(cx + dirX * tip, cy + dirY * tip),
+            strokeWidth = spokeWidth,
+            cap = StrokeCap.Round
+          )
+        }
       }
 
       // 0/6/12/18 四个刻度
